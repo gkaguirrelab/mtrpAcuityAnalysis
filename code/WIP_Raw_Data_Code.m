@@ -1,0 +1,140 @@
+function [v_prime_w, u_prime_w, driftDiscrimination] = ParseCCTTextfile(fName)
+% Extracts data from Metropsis text file from the Peripheral Acuity Test
+%
+% Syntax:
+%    [v_prime_w, u_prime_w, azimuthsTable] = ParseCCTTextfile(fName)
+%
+%
+% Description:
+%    The Metropsis system implements the Peripheral Acuity Test and outputs
+%    the data in a text file. This code reads the text file and extracts 
+%    the information necessary to calculate the SF threshold.
+%
+% Inputs
+%     fName          - Matlab string with filename. Can be relative to
+%                      Matlab's current working directory, or absolute.
+%
+% Outputs:
+%     v_prime_w         - v_prime value of center
+%     
+
+
+% History:
+%    05/31/19  jen       Created routine using code provided by dce 
+
+    % Retrieve v_prime_w, u_prime_w
+    %Brackets is creating the new variable, getValues of UVprimeW is the
+    %function?
+    [v_prime_w, u_prime_w] = getValuesOfUVprimeW(fName);
+    % Retrieve azimuths table
+    driftDiscrimination = getDriftDiscrimination(fName);
+end
+ 
+ 
+function driftDiscrimination = getDriftDiscrimination(fName)
+    
+    driftDiscrimination = [];
+    
+    % Lines we are searching for before we start extracting the azimuths table
+    targetLine1 = 'Trials';
+    targetLine2 = 'Events';
+    targetLine3 = 'Drift Discrimination';
+    
+    % Open file (read /fid as file name)
+    fid = fopen(fName);
+    
+    % Scan file one line at a time
+    tline = fgetl(fid);
+    
+    while ischar(tline)
+        % check for targetLine1
+        if contains(tline, targetLine1)
+            % check for targetLine2
+            tline = fgetl(fid);
+            if (contains(tline, targetLine2))
+                % check for targetLine3
+                tline=fgetl(fid);
+                if (contains(tline, targetLine3))
+                    keepLooping = true;
+                while (keepLooping)
+                    % keep reading lines and filling table long as they start with 'azimuth'
+                    driftDiscriminationRowVals = getAzimuthTableRowFromLineString(fgetl(fid));
+                    %This section assumes that all of the drift discrimination would be next to one another. 
+                    %Should I attack it from "read every third" or is there
+                    %another approach?
+                    if (isempty(driftDiscriminationRowVals))
+                        % All done
+                        keepLooping = false; 
+                    else
+                        % Insert row
+                        row = size(driftDiscrimination,1)+1;
+                        driftDiscrimination(row,:) = driftDiscriminationRowVals;
+                    end
+                end % while (keepLooping)
+            else
+                fprintf('Did not detect line: ''%s''.', targetLine2);
+            end
+        end 
+        % Read next line
+        tline = fgetl(fid);
+    end
+    fclose(fid);
+    %disp(azimuthsTable);
+ 
+end
+ 
+function vals = getAzimuthTableRowFromLineString(lineString)
+    [~, notMatched] = regexp(lineString,'\s+', 'match', 'split');
+    % Check that first item is 'azimuth'
+    if (strcmp(notMatched{1}, 'azimuth'))
+        vals(1) = str2double(notMatched{2});
+        vals(2) = str2double(notMatched{3});
+        vals(3) = str2double(notMatched{6});
+    else
+        vals = [];
+    end
+end
+ 
+ 
+function [v_prime_w, u_prime_w] = getValuesOfUVprimeW(fName)
+    
+    % Lines we are searching for before we start extracting the v_prime_w, u_prime_w
+    targetLine1 = 'Independent Variables';
+    targetLine2 = 'Value';
+    
+    % Open file
+    fid = fopen(fName);
+    
+    % Scan first line
+    tline = fgetl(fid);
+    
+    % Scan file one line at a time
+    while ischar(tline)
+        % check for targetLine1
+        if contains(tline, targetLine1)
+            % Read the targetLine2
+            tline = fgetl(fid);
+            if (contains(tline, targetLine2))
+                % It is, read next 2 lines to get the 'v_prime_w' and 'u_prime_w' values
+                v_prime_w = getPropertyValueFromLineString(fgetl(fid), 'v_prime_w'); 
+                u_prime_w = getPropertyValueFromLineString(fgetl(fid), 'u_prime_w');
+            else
+                fprintf('Did not detect line: ''%s''.', targetLine2);
+            end
+        end
+        % Read next line
+        tline = fgetl(fid);
+    end
+    fclose(fid);
+ 
+end
+ 
+function val = getPropertyValueFromLineString(lineString, propertyName)
+    splitStr = regexp(lineString,propertyName,'split');
+    if (numel(splitStr) < 2)
+        error(sprintf('Did not find a value in line: ''%s'' for property named: ''%s''.', lineString, propertyName));
+    else
+        val = str2double(splitStr{2});
+    end
+end
+ 
