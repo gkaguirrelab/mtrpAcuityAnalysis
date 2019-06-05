@@ -1,4 +1,4 @@
-function [v_prime_w, u_prime_w, driftDiscrimination] = WIP_Raw_Data_Code(fName)
+function [positionX, positionY, response] = WIP_Raw_Data_Code(fName)
 % Extracts data from Metropsis text file from the Peripheral Acuity Test
 
 
@@ -14,7 +14,7 @@ function [v_prime_w, u_prime_w, driftDiscrimination] = WIP_Raw_Data_Code(fName)
 
 
 % Outputs:
-%     response         - hit or miss
+%     response         - hit(1) or miss(0)  
 %     positionX        - measured by degrees of eccentricity along X axis
 %     positionY        - measured by degrees of eccentricity along Y axis
 %     
@@ -25,59 +25,72 @@ function [v_prime_w, u_prime_w, driftDiscrimination] = WIP_Raw_Data_Code(fName)
 %
 %
 
-    % retrieve values 
-    driftDiscrimination = getDriftDiscrimination(fName);
+    % Retrieve values 
+    response = getDriftDiscrimination(fName);
 end
  
  
-function driftDiscrimination = getDriftDiscrimination(fName)
-    
-    driftDiscrimination = [];
-    
-    % Lines we are searching for before we start extracting the azimuths table
+function response = getDriftDiscrimination(fname)
+% Creates an empty matrix "response"
+response = [];
+    % Lines to search for before beginning the data pull
     targetLine1 = 'Trials';
     targetLine2 = 'Events';
     targetLine3 = 'Drift Discrimination';
     
-    % Open file (read /fid as file name)
-    fid = fopen(fName);
+    % Open the file
+    fid = fopen(fname);
     
-    % Scan file one line at a time
+    % Read file one line at a time
     tline = fgetl(fid);
-    
+
     while ischar(tline)
-        % check for targetLine1
         if contains(tline, targetLine1)
-            % check for targetLine2
             tline = fgetl(fid);
-            if (contains(tline, targetLine2))
-                % check for targetLine3
-                tline=fgetl(fid);
-                if (contains(tline, targetLine3))
+            if contains(tline, targetLine2)
+                tline = fgetl(fid);
+                if contains(tline, targetLine3)
                     keepLooping = true;
                     while (keepLooping)
-                        % record the response of "hit" or "miss"
-                         character = fscanf(fid, '%hitms'); 
-                                if character >= 3
-                                   %response = character;
-                                else
-                                    fprintf('Did not detect line: ''%s''.', targetLine2);
-                                end
-                            % move to the next line, always Visual Stimulus
-                            tline = fget(fid);  
-                            % record PositionX
-                            % record PositionY                      
-                            if (isempty(driftDiscriminationRowVals))
-                                % All done
-                                keepLooping = false; 
-                            end
-                     end % while (keepLooping)
+                        % Run the code from the function below, store output as
+                        % response (0,1)
+                        response = getResponseData(fgetl(fid), 'Response');
+                        % Read the next line (always Visual Stimulus)
+                        tline = fgetl(fid);
+                        % Record PositionX
+                        % Record PositionY
+                    end
                 end
             end
-        end 
+        end
         tline = fgetl(fid);
     end
-    fclose(fid); 
+    fclose(fid);
 end
 
- 
+function val = getResponseData(lineString, propertyName)
+    % Pull data from specified lineString that is either Hit or miss
+    % and if miss, output = 0, if hit output = 1
+    out = regexp(lineString, '(Hit|Miss)\w', 'match');
+    if out == 'Miss'
+        val = 0;
+    else
+        val = 1;
+    end
+end
+
+
+% fname = 'C:\Users\Jill\Dropbox (Aguirre-Brainard Lab)\MTRP_data\Exp_PRCM0\Subject_JILL NOFZIGER\JILL NOFZIGER_1.txt';
+% fid = fopen('C:\Users\Jill\Dropbox (Aguirre-Brainard Lab)\MTRP_data\Exp_PRCM0\Subject_JILL NOFZIGER\JILL NOFZIGER_1.txt');
+A = readmatrix(fname);
+positionXnan = A(:,22);
+positionX = rmmissing(positionXnan);
+
+positionYnan = A(:,23);
+positionY = rmmissing(positionYnan);
+
+responseNan = A(:,24);
+response = rmmissing(responseNan);
+
+results = [positionX positionY response]
+fclose(fid);
