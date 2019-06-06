@@ -22,7 +22,7 @@ function [positionX, positionY, response] = WIP_Raw_Data_Code(fName)
 
 % History:
 %    05/31/19  jen       Created routine using code provided by dce
-%
+%    06/06/19  jen       Added variables positionX and positionY
 %
 
     % Retrieve values 
@@ -55,10 +55,6 @@ response = [];
                         % Run the code from the function below, store output as
                         % response (0,1)
                         response = getResponseData(fgetl(fid), 'Response');
-                        % Read the next line (always Visual Stimulus)
-                        tline = fgetl(fid);
-                        % Record PositionX
-                        % Record PositionY
                     end
                 end
             end
@@ -79,9 +75,6 @@ function val = getResponseData(lineString, propertyName)
     end
 end
 
-
-% fname = 'C:\Users\Jill\Dropbox (Aguirre-Brainard Lab)\MTRP_data\Exp_PRCM0\Subject_JILL NOFZIGER\JILL NOFZIGER_1.txt';
-% fid = fopen('C:\Users\Jill\Dropbox (Aguirre-Brainard Lab)\MTRP_data\Exp_PRCM0\Subject_JILL NOFZIGER\JILL NOFZIGER_1.txt');
 A = readmatrix(fname);
 positionXnan = A(:,22);
 positionX = rmmissing(positionXnan);
@@ -89,8 +82,4 @@ positionX = rmmissing(positionXnan);
 positionYnan = A(:,23);
 positionY = rmmissing(positionYnan);
 
-responseNan = A(:,24);
-response = rmmissing(responseNan);
-
-results = [positionX positionY response]
 fclose(fid);
