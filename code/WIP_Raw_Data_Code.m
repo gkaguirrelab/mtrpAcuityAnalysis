@@ -1,11 +1,15 @@
-function [positionX, positionY, response] = WIP_Raw_Data_Code(fName)
+function [table] = WIP_Raw_Data_Code(fName)
+%change this
+fname = 'C:\Users\Jill\Dropbox (Aguirre-Brainard Lab)\MTRP_data\Exp_PRCM4\Subject_JILL NOFZIGER\JILL NOFZIGER_1.txt';
 % Extracts data from Metropsis text file from the Peripheral Acuity Test
 
 
 % Description:
 %    The Metropsis system implements the Peripheral Acuity Test and outputs
 %    the data in a text file. This code reads the text file and extracts 
-%    the information necessary to calculate the SF threshold.
+%    the information necessary to calculate the SF threshold into a three 
+%    column numeric array. 
+%
 
 
 % Inputs
@@ -14,7 +18,7 @@ function [positionX, positionY, response] = WIP_Raw_Data_Code(fName)
 
 
 % Outputs:
-%     response         - hit(1) or miss(0)  
+%     response         - hit or miss  
 %     positionX        - measured by degrees of eccentricity along X axis
 %     positionY        - measured by degrees of eccentricity along Y axis
 %     
@@ -23,63 +27,55 @@ function [positionX, positionY, response] = WIP_Raw_Data_Code(fName)
 % History:
 %    05/31/19  jen       Created routine using code provided by dce
 %    06/06/19  jen       Added variables positionX and positionY
+%    06/11/19  jen       Condensed and completed extraction process
+%
 %
 
-    % Retrieve values 
-    response = getDriftDiscrimination(fName);
+
+
+
+
+% Open file
+fid = fopen(fname);
+
+% Retrieve all variables
+response = getResponseData(fname);
+positionY = getPositionY(fname);
+positionX = getPositionX(fname);
+
+% Combine data from variables into an 3 column numeric array
+table = [positionX positionY response];
 end
  
  
-function response = getDriftDiscrimination(fname)
-% Creates an empty matrix "response"
-response = [];
-    % Lines to search for before beginning the data pull
-    targetLine1 = 'Trials';
-    targetLine2 = 'Events';
-    targetLine3 = 'Drift Discrimination';
+function response = getResponseData(fname) 
+    % Retrieve text from response column
     
-    % Open the file
-    fid = fopen(fname);
-    
-    % Read file one line at a time
-    tline = fgetl(fid);
-
-    while ischar(tline)
-        if contains(tline, targetLine1)
-            tline = fgetl(fid);
-            if contains(tline, targetLine2)
-                tline = fgetl(fid);
-                if contains(tline, targetLine3)
-                    keepLooping = true;
-                    while (keepLooping)
-                        % Run the code from the function below, store output as
-                        % response (0,1)
-                        response = getResponseData(fgetl(fid), 'Response');
-                    end
-                end
-            end
-        end
-        tline = fgetl(fid);
-    end
-    fclose(fid);
+    retrieveValue = readmatrix(fname, 'OutputType', 'string');
+    responseTable = retrieveValue(:,24);
+    responseNA = rmmissing(responseTable);
+    % Delete "NA" responses
+    responseChr = responseNA(responseNA ~= 'NA');
+    % Convert string array to numeric
+    responseHex = regexprep(responseChr, 'Hit', '01');
+    responseHex2 = regexprep(responseHex, 'Miss', '00');
+    response = hex2dec(responseHex2);
 end
 
-function val = getResponseData(lineString, propertyName)
-    % Pull data from specified lineString that is either Hit or miss
-    % and if miss, output = 0, if hit output = 1
-    out = regexp(lineString, '(Hit|Miss)\w', 'match');
-    if out == 'Miss'
-        val = 0;
-    else
-        val = 1;
-    end
+
+function positionY = getPositionY(fname)
+    % Retrieve values of Y 
+    retrieveValue = readmatrix(fname);
+    positionYnan = retrieveValue(:,23);
+    % Remove Nan from vector
+    positionY = rmmissing(positionYnan);
 end
 
-A = readmatrix(fname);
-positionXnan = A(:,22);
-positionX = rmmissing(positionXnan);
+function positionX = getPositionX(fname)
+    % Retrieve values of X
+    retrieveValue = readmatrix(fname);
+    positionXnan = retrieveValue(:,22);
+    % Remove Nan from vector
+    positionX = rmmissing(positionXnan);
+end
 
-positionYnan = A(:,23);
-positionY = rmmissing(positionYnan);
-
-fclose(fid);
