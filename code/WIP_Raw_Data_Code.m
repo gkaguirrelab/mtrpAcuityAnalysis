@@ -7,7 +7,7 @@ fname = 'C:\Users\Jill\Dropbox (Aguirre-Brainard Lab)\MTRP_data\Exp_PRCM4\Subjec
 % Description:
 %    The Metropsis system implements the Peripheral Acuity Test and outputs
 %    the data in a text file. This code reads the text file and extracts 
-%    the information necessary to calculate the SF threshold into a three 
+%    the information necessary to calculate the SF threshold into a four 
 %    column numeric array. 
 %
 
@@ -21,7 +21,8 @@ fname = 'C:\Users\Jill\Dropbox (Aguirre-Brainard Lab)\MTRP_data\Exp_PRCM4\Subjec
 %     response         - hit or miss  
 %     positionX        - measured by degrees of eccentricity along X axis
 %     positionY        - measured by degrees of eccentricity along Y axis
-%     
+%     carrierSF        - cycles per second(?)
+%
 
 
 % History:
@@ -42,9 +43,10 @@ fid = fopen(fname);
 response = getResponseData(fname);
 positionY = getPositionY(fname);
 positionX = getPositionX(fname);
+carrierSF = getCarrierSF(fname);
 
-% Combine data from variables into an 3 column numeric array
-table = [positionX positionY response];
+% Combine data from variables into an 4 column numeric array
+table = [carrierSF positionX positionY response];
 end
  
  
@@ -77,5 +79,11 @@ function positionX = getPositionX(fname)
     positionXnan = retrieveValue(:,22);
     % Remove Nan from vector
     positionX = rmmissing(positionXnan);
+end
+
+function carrierSF = getCarrierSF(fname)
+    retrieveValue = readmatrix(fname);
+    carrierSFNan = retrieveValue(:,12);
+    carrierSF = rmmissing(carrierSFNan);
 end
 
