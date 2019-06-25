@@ -1,40 +1,40 @@
 function [plotData, table] = WIP_Raw_Data_Code(fname)
-
 % Extracts data from Metropsis text file from the Peripheral Acuity Test
-
-
+%
+% Syntax:
+%  [plotData, table] = WIP_Raw_Data_Code(fname)
+%
 % Description:
-%    The Metropsis system implements the Peripheral Acuity Test and outputs
-%    the data in a text file. This code reads the text file and extracts 
-%    the information necessary to calculate the SF threshold into a four 
-%    column numeric array. 
+%	The Metropsis system implements the Peripheral Acuity Test and outputs
+%	the data in a text file. This code reads the text file and extracts the
+%	information necessary to calculate the SF threshold into a four column
+%	numeric array.
 %
-
-
-% Inputs
-%     fName          - Matlab string with filename. Can be relative to
-%                      Matlab's current working directory, or absolute.
-
-
+% Inputs:
+%	fName                 - Matlab string with filename. Can be relative to
+%                           Matlab's current working directory, or
+%                           absolute.
+%
 % Outputs:
-%     response         - hit or miss  
-%     positionX        - measured by degrees of eccentricity along X axis
-%     positionY        - measured by degrees of eccentricity along Y axis
-%     carrierSF        - cycles per second(?)
+%	response              - hit or miss  
+%	positionX             - measured by degrees of eccentricity along X
+%                           axis
+%	positionY             - measured by degrees of eccentricity along Y
+%                           axis
+%	carrierSF             - cycles per second(?)
 %
-
-
 % History:
 %    05/31/19  jen       Created routine using code provided by dce
 %    06/06/19  jen       Added variables positionX and positionY
 %    06/11/19  jen       Condensed and completed extraction process
 %    06/25/19  jen       Added graphing of SF in cycles/degree v Trial #
 %
-%
-
-
-%change this
-fname = 'C:\Users\Jill\Dropbox (Aguirre-Brainard Lab)\MTRP_data\Exp_PRCM0\Subject_JILL NOFZIGER\JILL NOFZIGER_1.txt';
+% Examples:
+%{
+    dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
+    fname = fullfile(dataBasePath,'Exp_PRCM0','Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt');
+    [plotData, table] = WIP_Raw_Data_Code(fname)
+%}
 
 
 % Open file
