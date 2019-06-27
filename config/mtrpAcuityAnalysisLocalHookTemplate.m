@@ -48,9 +48,14 @@ elseif isunix
     setpref(projectName,'melaDataPath', MELA_dataBasePath);
     setpref(projectName,'melaAnalysisPath', MELA_analysisBasePath);
 elseif ispc
+    % Remove windows prefix from userID
+    tmp = strsplit(userID,filesep);
+    userID = tmp{2};
+    
     % Code to run on Windows platform
     MTRP_dataBasePath = fullfile('C:',filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_data');
     MTRP_analysisBasePath = fullfile('C:',filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_analysis');
+    
 else
     disp('What are you using?')
 end
