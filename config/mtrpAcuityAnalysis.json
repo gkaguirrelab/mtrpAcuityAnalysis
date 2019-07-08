@@ -1,4 +1,9 @@
 [
+    {
+        "name": "Palamedes_1.8.2",
+        "pathPlacement": "append",
+        "type": "include"
+    },
 	{
 		"flavor": "",
 		"hook": "",

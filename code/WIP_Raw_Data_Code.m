@@ -33,21 +33,11 @@ function [plotData, tableFin] = WIP_Raw_Data_Code(fname)
 %    06/25/19  jen       Added graphing of SF in cycles/degree v Trial #
 %
 % Examples:
-%{
-
-    dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
-    fname = fullfile(dataBasePath,'Exp_CRCM9','Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt');
-    [plotData] = WIP_Raw_Data_Code(fname)
-%}
-
-
-
-
-
-
-
-
-
+%{ 
+    dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath'); 
+    fname = fullfile(dataBasePath,'Exp_PRCM0','Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt'); 
+    [plotData, table] = WIP_Raw_Data_Code(fname) 
+%} 
 
 
 
@@ -66,7 +56,7 @@ carrierSF = getCarrierSF(retrieveValue, tableSize);
 
 
 % Combine data from variables into an 4 column numeric array
-table = [carrierSF positionX positionY response];
+table = [carrierSF positionX positionY response]
 
 
 % Create tables of values for the different locations
@@ -74,8 +64,6 @@ table = [carrierSF positionX positionY response];
         % peripheral data
     [plotData, tableFin] = getPlot(table);
 
-        % central data
-%     [tableFin5 tableFinNeg5 tableFin25 tableFinNeg25, trialMaxCen] = getEccTablesCen(table);
 end
  
  
@@ -119,7 +107,7 @@ function carrierSF = getCarrierSF(retrieveValue, tableSize)
 end
 
 function [plotData, tableFin] = getPlot(table)
-    for k = [-20 -10 -5 -2.5 2.5 5 10 20]
+    for k = [-20 -10 -5 -2.5 2.5 5 ]%10 20]
         if table(:,2)==0
             ind = table(:,3) == k;
         else
@@ -128,7 +116,7 @@ function [plotData, tableFin] = getPlot(table)
         tableVal = table(ind,:);   % Create tables from rows        
         [trialMax, ~] = size(tableVal);   % Generate trial #s for tables
         trialNum = (1:trialMax)';
-        tableFin = [trialNum tableVal];
+        tableFin = [trialNum tableVal]
         indA = tableFin(:,2) ~= 1;      % Remove check tests
         tableNO = tableFin(indA,:);
             if k == -20
@@ -181,4 +169,5 @@ function [plotData, tableFin] = getPlot(table)
         text(24, 1, xmax, 'FontSize', 7);
         hold off
     end
+    
 end
