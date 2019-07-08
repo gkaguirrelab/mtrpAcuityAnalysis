@@ -29,49 +29,38 @@ function mtrpAcuityAnalysisLocalHook
 fprintf('mtrpAcuityAnalysis local hook.\n');
 projectName = 'mtrpAcuityAnalysis';
 
-%% find the correct python version
-if ~strcmp(pyversion,'3.7')
-    fprintf('attempting to change python path to anaconda v3.7')
-    pyversion('/Applications/anaconda3/bin/python')
-end
-
 %% Delete any old prefs
 if (ispref(projectName))
     rmpref(projectName);
 end
 
-%% Specify base paths for materials and data
+%% Get the userID
 [~, userID] = system('whoami');
 userID = strtrim(userID);
-switch userID
-    case {'melanopsin' 'pupillab'}
-        MELA_dataBasePath = ['/Users/' userID '/Dropbox (Aguirre-Brainard Lab)/MELA_data/'];
-        MELA_analysisBasePath = ['/Users/' userID '/Dropbox (Aguirre-Brainard Lab)/MELA_analysis/'];
-    case {'dhb'}
-        MELA_dataBasePath = ['/Users1' '/Dropbox (Aguirre-Brainard Lab)/MELA_data/'];
-        MELA_analysisBasePath = ['/Users1/' '/Dropbox (Aguirre-Brainard Lab)/MELA_analysis/'];
-    otherwise
-        materialsBasePath = ['/Users/' userID '/Dropbox (Aguirre-Brainard Lab)/TOME_materials/hardwareSpecifications/metropsis/PR670 calibration/'];
-        MELA_dataBasePath = ['/Users/' userID '/Dropbox (Aguirre-Brainard Lab)/MELA_data/'];
-        MELA_analysisBasePath = ['/Users/' userID '/Dropbox (Aguirre-Brainard Lab)/MELA_analysis/'];
-        MTRP_dataBasePath = ['/Users/' userID '/Dropbox (Aguirre-Brainard Lab)/MTRP_data/'];
-end
 
-%% Specify where output goes
-
+%% Specify the base path of the data and analysis directories
 if ismac
     % Code to run on Mac plaform
-    setpref(projectName,'melaDataPath', MELA_dataBasePath);
-    setpref(projectName,'melaAnalysisPath', MELA_analysisBasePath);
-    setpref(projectName,'calFilePath', fullfile(materialsBasePath,'MetropsisScreen.mat'));
-    setpref(projectName,'mtrpDataPath', MTRP_dataBasePath); 
+    MTRP_dataBasePath = fullfile(filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_data');
+    MTRP_analysisBasePath = fullfile(filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_analysis');
 elseif isunix
     % Code to run on Linux plaform
     setpref(projectName,'melaDataPath', MELA_dataBasePath);
     setpref(projectName,'melaAnalysisPath', MELA_analysisBasePath);
 elseif ispc
+    % Remove windows prefix from userID
+    tmp = strsplit(userID,filesep);
+    userID = tmp{2};
+    
     % Code to run on Windows platform
-    warning('No supported for PC')
+    MTRP_dataBasePath = fullfile('C:',filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_data');
+    MTRP_analysisBasePath = fullfile('C:',filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_analysis');
+    
 else
     disp('What are you using?')
 end
+
+%% Set the prefs
+setpref(projectName,'mtrpDataPath', MTRP_dataBasePath); 
+setpref(projectName,'mtrpAnalysisPath', MTRP_analysisBasePath); 
+
