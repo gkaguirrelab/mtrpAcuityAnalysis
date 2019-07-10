@@ -1,4 +1,4 @@
-function [plotData, tableFin] = WIP_Raw_Data_Code(fname)
+function [binPlot, perRight] = WIP_Raw_Data_Code(fname)
 % Extracts data from Metropsis text file from the Peripheral Acuity Test
 %
 % Syntax:
@@ -33,12 +33,28 @@ function [plotData, tableFin] = WIP_Raw_Data_Code(fname)
 %    06/25/19  jen       Added graphing of SF in cycles/degree v Trial #
 %
 % Examples:
-%{ 
-    dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath'); 
-    fname = fullfile(dataBasePath,'Exp_PRCM0','Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt'); 
-    [plotData, table] = WIP_Raw_Data_Code(fname) 
-%} 
+%{
+Original (works for sure)
+    dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
+    fname = fullfile(dataBasePath,'Exp_CRCM9','Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt')
+    [plotData, tableFin] = WIP_Raw_Data_Code(fname)
 
+
+dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
+    fname = fullfile(dataBasePath,'Exp_CRCM9','Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt')
+    [binPlot, perRight] = WIP_Raw_Data_Code(fname)
+
+
+Experimental (where is your God now?)
+dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
+   expFolderSet = {'Exp_PRCM0';'Exp_CRCM0';'Exp_PRCM4';'Exp_CRCM4';'Exp_CRCM9';'Exp_PRCM1';'Exp_CRCM1'};
+    for k = 1:8
+        expFolder = expFolderSet(k,1)
+        fnameCell = fullfile(dataBasePath,expFolder,'Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt');
+        fname = char(fnameCell)
+        [plotData, tableFin] = WIP_Raw_Data_Code(fname)
+    end
+%}
 
 
 % Open file
@@ -56,17 +72,21 @@ carrierSF = getCarrierSF(retrieveValue, tableSize);
 
 
 % Combine data from variables into an 4 column numeric array
-table = [carrierSF positionX positionY response]
+table = [carrierSF positionX positionY response];
 
 
 % Create tables of values for the different locations
         
-        % peripheral data
-    [plotData, tableFin] = getPlot(table);
-
+        % Location plot
+%     [plotData, tableFin] = getPlot(table);
+        % Bin plot
+    [binPlot, perRight] = getBinPlot(table)
+%     
+%             % Location plot
+%     [plotData, tableFin] = getPlot(table);
 end
  
- 
+
 function response = getResponseData(fname) 
     % Retrieve text from response column
     retrieveValueStr = readmatrix(fname, 'OutputType', 'string');
@@ -116,32 +136,32 @@ function [plotData, tableFin] = getPlot(table)
         tableVal = table(ind,:);   % Create tables from rows        
         [trialMax, ~] = size(tableVal);   % Generate trial #s for tables
         trialNum = (1:trialMax)';
-        tableFin = [trialNum tableVal]
+        tableFin = [trialNum tableVal];
         indA = tableFin(:,2) ~= 1;      % Remove check tests
         tableNO = tableFin(indA,:);
             if k == -20
                 left = 0.01;
-                height = 0.88;
+                height = 0.89;
             elseif k == -10
-                left = 0.13;
-                height = 0.76;
+                left = 0.12;
+                height = 0.78;
             elseif k == -5
-                left = 0.25;
-                height = 0.64;
+                left = 0.23;
+                height = 0.67;
             elseif k == -2.5
-                left = 0.37;
-                height = 0.52;
+                left = 0.34;
+                height = 0.56;
             elseif k == 2.5
-                left = 0.52;
-                height = 0.37;
+                left = 0.56;
+                height = 0.34;
             elseif k == 5
-                left = 0.64;
-                height = 0.25;
+                left = 0.67;
+                height = 0.23;
             elseif k == 10
-                left = 0.76;
-                height = 0.13;
+                left = 0.78;
+                height = 0.12;
             elseif k == 20
-                left = 0.88;
+                left = 0.89;
                 height = 0.01;
             end
       % Calculate position
@@ -171,3 +191,55 @@ function [plotData, tableFin] = getPlot(table)
     end
     
 end
+
+function [binPlot, perRight] = getBinPlot(table)
+    for k = [5]
+        if table(:,2)==0
+            ind = table(:,3) == k;
+        else
+            ind = table(:,2) == k;  % Extract rows w/desired X position
+        end
+        tableVal = table(ind,:);   % Create tables from rows        
+        [trialMax, ~] = size(tableVal);   % Generate trial #s for tables
+        trialNum = (1:trialMax)';
+        tableFin = [trialNum tableVal];
+        col = tableFin(:,2);
+        totalTrial = length(col);
+        binNum = (totalTrial/5)+2;      % Calculate # of bins needed
+        maxVal = max(col);
+        logMax = log10(maxVal);
+        bins = logspace(0,logMax, binNum);   % Generate log spaced bins
+        [~, cycles] = size(bins);          % Calculate # of iterations needed
+
+        
+        % Calculate % correct for each bin        
+        for k = 2:cycles
+            
+            % Create bin ranges
+            upperLim = bins(:,k);
+            lowerLim = bins(:,k-1);
+            rangeInd = tableFin(:,2)<= upperLim;
+            tableInt = tableFin(rangeInd,:);
+            binInd = tableInt(:,2)>= lowerLim;
+            binMat = tableInt(binInd,:);
+            
+            % Determine how many were correct
+            corrects = binMat(:,5) == 1;
+            [numCorr, ~] = size(binMat(corrects,:));
+            [numTotal, ~] = size(binMat);
+            perRight = numCorr/numTotal;
+            % Create x axis
+            limits = [lowerLim, upperLim];
+            stim = mean(log10(limits));
+            % Plot results
+            
+            binPlot = plot(2-stim, perRight, 'xk')
+            hold on
+            axis([0 2 0 1.1])
+            ylabel('% correct')
+            xlabel('2-mean(log10) of bin')
+            title('Exp CRCM9')
+        end
+    end 
+end
+
