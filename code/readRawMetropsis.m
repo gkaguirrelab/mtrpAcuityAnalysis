@@ -1,4 +1,4 @@
-function myData = readRawMetropsis(fname)
+function axisAcuityData = readRawMetropsis(fname)
 % Extracts data from Metropsis text file from the Peripheral Acuity Test
 %
 % Syntax:
@@ -15,7 +15,7 @@ function myData = readRawMetropsis(fname)
 %                           absolute.
 %
 % Outputs:
-%   myData
+%   axisAcuityData
 %       posX              - Measured by degrees of eccentricity along the x
 %                           axis
 %       posY              - Measured by degrees of eccentricity along the y
@@ -31,9 +31,9 @@ function myData = readRawMetropsis(fname)
 
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
     fname = fullfile(dataBasePath,'Exp_CRCM9','Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt');
-    myData = readRawMetropsis(fname)
+    axisAcuityData = readRawMetropsis(fname)
 %}
-myData = struct;
+axisAcuityData = struct;
 
 
 fid = fopen(fname);
@@ -47,24 +47,24 @@ fid = fopen(fname);
     % Convert string array to numeric
     responseHex = regexprep(responseChr, 'Hit', '01');
     responseHex2 = regexprep(responseHex, 'Miss', '00');
-    myData.response = hex2dec(responseHex2);
+    axisAcuityData.response = hex2dec(responseHex2);
 
 retrieveValue = readmatrix(fname);
 
 %Collect Y position
     positionYnan = retrieveValue(:,23);
-    myData.posY = rmmissing(positionYnan);  % Remove Nan from vector
+    axisAcuityData.posY = rmmissing(positionYnan);  % Remove Nan from vector
     
 % Collect X position
     positionXnan = retrieveValue(:,22);
-    myData.posX = rmmissing(positionXnan);  % Remove Nan from vector
+    axisAcuityData.posX = rmmissing(positionXnan);  % Remove Nan from vector
 
-tableSize = length(myData.posX);
+tableSize = length(axisAcuityData.posX);
 
 % Collect spatial frequencies
     carrierSFNan = retrieveValue(:,12);
     carrierSFNa = rmmissing(carrierSFNan);   % Remove Nan from vector
     carrierSFNorm = carrierSFNa(carrierSFNa ~= 0);
-    myData.cyclesPerDeg = carrierSFNorm(1:tableSize,:);
+    axisAcuityData.cyclesPerDeg = carrierSFNorm(1:tableSize,:);
 
 end
