@@ -1,8 +1,8 @@
-function [plotBins] = thresholdGraphs_binned(fname)
+function [plotBins, binTable] = thresholdGraphs_binned(fname)
 % Extracts data from Metropsis text file from the Peripheral Acuity Test
 %
 % Syntax:
-%  [plotBins] = thresholdGraphs_binned(fname)
+%  [plotBins, binTable] = thresholdGraphs_binned(fname)
 %
 % Description:
 %	The Metropsis system implements the Peripheral Acuity Test and outputs
@@ -29,10 +29,10 @@ function [plotBins] = thresholdGraphs_binned(fname)
 
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
     fname = fullfile(dataBasePath,'Exp_CRCM9','Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt');
-    [plotBins] = thresholdGraphs_binned(fname)
+    [plotBins, binTable] = thresholdGraphs_binned(fname)
     
 %}
- deg = 2.5
+ deg = -5
 % Open file
     fid = fopen(fname);
 % Retrieve all variables
@@ -47,7 +47,7 @@ table = [carrierSF positionX positionY response]
 
 
 % Plot percent correct vs 2-mean(log10) of SF bins       
-[plotBins] = getPlot(table,deg);
+[plotBins, binTable] = getPlot(table,deg);
 
 end
 function response = getResponseData(fname) 
@@ -84,7 +84,7 @@ function carrierSF = getCarrierSF(retrieveValue, tableSize)
     
 end
 
-function [plotBins] = getPlot(table,deg)
+function [plotBins, binTable] = getPlot(table,deg)
     for k = deg
         if table(:,2)==0
             ind = table(:,3) == k;
@@ -120,12 +120,15 @@ function [plotBins] = getPlot(table,deg)
             [numCorr, ~] = size(binMat(corrects,:));
             [numTotal, ~] = size(binMat);
             perRight = numCorr/numTotal;
-            % Create x axis
+            % Create x values
             limits = [lowerLim, upperLim];
             stim = mean(log10(limits));
+            % Create table of x,y points
+            valueOfStim(k-1) = stim;
+            valueOfRight(k-1) = perRight;
+            binTable = [valueOfStim' valueOfRight'];
             % Plot results
-            
-            plotBins = plot(2-stim, perRight, 'xk')
+            plotBins = plot(2-stim, perRight, 'xk');
             hold on
             axis([0 2 0 1.1])
             ylabel('% correct')
