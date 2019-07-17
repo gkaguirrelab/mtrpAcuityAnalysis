@@ -54,7 +54,7 @@ function [plotData, tableFin] = WIP_Raw_Data_Code(fname)
 
 % Retrieve all variables
 response = getResponseData(fname);
-retrieveValue = readmatrix(fname);
+retrieveValue = ReadMatrix(fname);
 positionY = getPositionY(retrieveValue);
 positionX = getPositionX(retrieveValue);
 tableSize = size(positionX,1);

@@ -1,4 +1,4 @@
-function axisAcuityData = readRawMetropsis(fname)
+function [axisAcuityData, locate, locateX, blankRes, blankStim] = readRawMetropsis(fname, k, locate, locateX, blankRes, blankStim)
 % Extracts data from Metropsis text file from the Peripheral Acuity Test
 %
 % Syntax:
@@ -32,12 +32,28 @@ function axisAcuityData = readRawMetropsis(fname)
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
     fname = fullfile(dataBasePath,'Exp_CRCM9','Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt');
     axisAcuityData = readRawMetropsis(fname)
+
+
+
+    dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
+    expFolderSet = {'Exp_PRCM0';'Exp_CRCM0';'Exp_PRCM4';'Exp_CRCM4';'Exp_CRCM9';'Exp_PRCM1';'Exp_CRCM1'};
+    locate = NaN(200,8);
+    locateX = NaN(200,8);
+    blankRes = NaN(200,8);
+    blankStim = NaN(200,8);
+    for k = 1:8
+        expFolder = expFolderSet(k,1);
+        fnameCell = fullfile(dataBasePath,expFolder,'Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt');
+        fname = char(fnameCell)
+        [axisAcuityData, locate, locateX, blankRes, blankStim] = readRawMetropsis(fname, k, locate, locateX, blankRes, blankStim)
+    end
 %}
 axisAcuityData = struct;
 
 
 fid = fopen(fname);
 % Collect correct responses
+
     % Retrieve text from response column
     retrieveValueStr = readmatrix(fname, 'OutputType', 'string');
     responseTable = retrieveValueStr(:,24);
@@ -47,24 +63,55 @@ fid = fopen(fname);
     % Convert string array to numeric
     responseHex = regexprep(responseChr, 'Hit', '01');
     responseHex2 = regexprep(responseHex, 'Miss', '00');
-    axisAcuityData.response = hex2dec(responseHex2);
+    numResp = hex2dec(responseHex2);
+    
+    extSp = 200-length(numResp);
+    additionRes = NaN(extSp,1);
+    totalVecRes = [numResp;additionRes];
+    blankRes(:,k) = [totalVecRes];
+    colVecRes = blankRes(:);
+    axisAcuityData.response = rmmissing(colVecRes);
+    
 
 retrieveValue = readmatrix(fname);
 
 %Collect Y position
+
     positionYnan = retrieveValue(:,23);
-    axisAcuityData.posY = rmmissing(positionYnan);  % Remove Nan from vector
+    posiY = rmmissing(positionYnan);  % Remove Nan from vector
+    extraZero = 200-length(posiY);
+    addition = NaN(extraZero,1);
+    totalVec = [posiY;addition];
+    locate(:,k) = [totalVec];
+    colVec = locate(:);
+    axisAcuityData.posY = rmmissing(colVec);
+    
+   
+    
     
 % Collect X position
     positionXnan = retrieveValue(:,22);
-    axisAcuityData.posX = rmmissing(positionXnan);  % Remove Nan from vector
+    posiX = rmmissing(positionXnan);  % Remove Nan from vector
+    extraZ = 200-length(posiX);
+    additionX = NaN(extraZ,1);
+    totalVecX = [posiX;additionX];
+    locateX(:,k) = [totalVecX];
+    colVecX = locateX(:);
+    axisAcuityData.posX = rmmissing(colVecX);
 
-tableSize = length(axisAcuityData.posX);
 
+numTrials = length(posiX);
 % Collect spatial frequencies
     carrierSFNan = retrieveValue(:,12);
     carrierSFNa = rmmissing(carrierSFNan);   % Remove Nan from vector
-    carrierSFNorm = carrierSFNa(carrierSFNa ~= 0);
-    axisAcuityData.cyclesPerDeg = carrierSFNorm(1:tableSize,:);
+    cPd = carrierSFNa(carrierSFNa ~= 0);
+    snipcPd = cPd(1:numTrials,:);
+    extra = 200-length(snipcPd);
+    additionCPD = NaN(extra,1);
+    totalVecCPD = [snipcPd;additionCPD];
+    blankStim(:,k) = [totalVecCPD];
+    colVecCPD = blankStim(:);
+    axisAcuityData.cyclesPerDeg = rmmissing(colVecCPD);
+
 
 end
