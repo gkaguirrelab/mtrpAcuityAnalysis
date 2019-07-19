@@ -24,18 +24,37 @@ dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
 % axisAcuityData = readRawMetropsis(fname)
 table = [axisAcuityData.cyclesPerDeg axisAcuityData.posX axisAcuityData.posY  axisAcuityData.response];
 
-for ii = [-20]% -10 -5 -2.5 2.5 5 10 20]
+
+for ii = [-20 -10 -5 -2.5 2.5 5 10 20]
+      
     if table(:,2)==0
         ind = table(:,3) == ii;
     else
         ind = table(:,2) == ii;  % Extract rows w/desired X position
     end
     tableVal = table(ind,:);   % Create tables from rows (all same X val)       
-    [trialMax, ~] = size(tableVal);   % Generate trial #s for tables
-    trialNum = (1:trialMax)';
-    tableFin = [trialNum tableVal];
-    indA = tableFin(:,2) ~= 1;      % Remove check tests
-    tableNO = tableFin(indA,:)
+%     [trialMax, ~] = size(tableVal);   % Generate trial #s for tables
+%     trialNum = (1:trialMax)';
+%     tableFin = [trialNum tableVal];
+    indA = tableVal(:,2) ~= 1;      % Remove check tests
+    tableNO = tableVal(indA,:)
+    
+    while tableNO(:,2) == tableNO(:,3)
+        indB = tableNO(:,3) == ii
+        tableUn = tableNO(indB,:)
+    end
+    while tableNO(:,2) == 0 
+        indB = tableNO(:,3) == ii 
+        tableUn = tableNO(indB,:)
+    end
+    
+    
+    
+    
+    
+    
+    
+    
         if ii == -20 
             left = 0.01;
             height = 0.89;
@@ -63,16 +82,27 @@ for ii = [-20]% -10 -5 -2.5 2.5 5 10 20]
         end
   % Calculate position
   if tableNO(:,2) == tableNO(:,3)
-
-      pos = [left left 0.10 0.10];
-  elseif table(:,2) == (table(:,3)*(-1))
-
-      pos = [left height 0.1 0.1];
-  elseif table(:,2) == 0
-      pos = [0.45 left 0.1 0.1];
-  else 
-      pos = [left 0.45 0.1 0.1];
+     while tableNO(:,3) == ii
+         pos = [left left 0.1 0.1];
+     end
+     while tableNO(:,3) == -ii
+         pos= [left height 0.1 0.1]
+     end
+     while tableNO(:,3) == 0 
+         pos = [left 0 0.1 0.1];
+     end
   end
+  
+         
+%       pos = [left left 0.10 0.10];
+%   elseif table(:,2) == (table(:,3)*(-1))
+% 
+%       pos = [left height 0.1 0.1];
+%   elseif table(:,2) == 0
+%       pos = [0.45 left 0.1 0.1];
+%   else 
+%       pos = [left 0.45 0.1 0.1];
+%   end
     x = tableNO(:,1);               % Plot graph
     y = tableNO(:,2);
     subplot('position', pos);
@@ -86,7 +116,7 @@ for ii = [-20]% -10 -5 -2.5 2.5 5 10 20]
     text(-1, 5, xint, 'FontSize', 7); 
     text(-2, 25, ymax, 'FontSize', 7);
     text(24, 1, xmax, 'FontSize', 7);
-    hold off
+    hold on
 end
     
 end

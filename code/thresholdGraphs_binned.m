@@ -105,11 +105,11 @@ function [plotBins, binTable] = getPlot(table,deg)
 
         
         % Calculate % correct for each bin        
-        for k = 2:cycles
+        for ii = 2:cycles
             
             % Create bin ranges
-            upperLim = bins(:,k);
-            lowerLim = bins(:,k-1);
+            upperLim = bins(:,ii);
+            lowerLim = bins(:,ii-1);
             rangeInd = tableFin(:,2)<= upperLim;
             tableInt = tableFin(rangeInd,:);
             binInd = tableInt(:,2)>= lowerLim;
@@ -124,8 +124,8 @@ function [plotBins, binTable] = getPlot(table,deg)
             limits = [lowerLim, upperLim];
             stim = mean(log10(limits));
             % Create table of x,y points
-            valueOfStim(k-1) = stim;
-            valueOfRight(k-1) = perRight;
+            valueOfStim(ii-1) = stim;
+            valueOfRight(ii-1) = perRight;
             binTable = [valueOfStim' valueOfRight'];
             % Plot results
             plotBins = plot(2-stim, perRight, 'xk');

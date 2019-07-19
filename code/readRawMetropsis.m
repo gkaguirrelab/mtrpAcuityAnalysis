@@ -28,19 +28,12 @@ function [axisAcuityData, locate, locateX, blankRes, blankStim] = readRawMetrops
 %
 % Examples:
 %{
-
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
-    fname = fullfile(dataBasePath,'Exp_CRCM9','Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt');
-    axisAcuityData = readRawMetropsis(fname)
-
-
-
-    dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
-    expFolderSet = {'Exp_PRCM0';'Exp_CRCM0';'Exp_PRCM4';'Exp_CRCM4';'Exp_CRCM9';'Exp_PRCM1';'Exp_CRCM1'};
     locate = NaN(200,8);
     locateX = NaN(200,8);
     blankRes = NaN(200,8);
     blankStim = NaN(200,8);
+    expFolderSet = {'Exp_PRCM0';'Exp_CRCM0';'Exp_PRCM4';'Exp_CRCM4';'Exp_CRCM9';'Exp_PRCM1';'Exp_CRCM1'};
     for k = 1:8
         expFolder = expFolderSet(k,1);
         fnameCell = fullfile(dataBasePath,expFolder,'Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt');
@@ -68,7 +61,7 @@ fid = fopen(fname);
     extSp = 200-length(numResp);
     additionRes = NaN(extSp,1);
     totalVecRes = [numResp;additionRes];
-    blankRes(:,k) = [totalVecRes];
+    blankRes(:,k) = totalVecRes;
     colVecRes = blankRes(:);
     axisAcuityData.response = rmmissing(colVecRes);
     
@@ -82,7 +75,7 @@ retrieveValue = readmatrix(fname);
     extraZero = 200-length(posiY);
     addition = NaN(extraZero,1);
     totalVec = [posiY;addition];
-    locate(:,k) = [totalVec];
+    locate(:,k) = totalVec;
     colVec = locate(:);
     axisAcuityData.posY = rmmissing(colVec);
     
@@ -95,12 +88,12 @@ retrieveValue = readmatrix(fname);
     extraZ = 200-length(posiX);
     additionX = NaN(extraZ,1);
     totalVecX = [posiX;additionX];
-    locateX(:,k) = [totalVecX];
+    locateX(:,k) = totalVecX;
     colVecX = locateX(:);
     axisAcuityData.posX = rmmissing(colVecX);
 
 
-numTrials = length(posiX);
+numTrials(:,k) = length(posiX)
 % Collect spatial frequencies
     carrierSFNan = retrieveValue(:,12);
     carrierSFNa = rmmissing(carrierSFNan);   % Remove Nan from vector
@@ -109,7 +102,7 @@ numTrials = length(posiX);
     extra = 200-length(snipcPd);
     additionCPD = NaN(extra,1);
     totalVecCPD = [snipcPd;additionCPD];
-    blankStim(:,k) = [totalVecCPD];
+    blankStim(:,k) = totalVecCPD;
     colVecCPD = blankStim(:);
     axisAcuityData.cyclesPerDeg = rmmissing(colVecCPD);
 
