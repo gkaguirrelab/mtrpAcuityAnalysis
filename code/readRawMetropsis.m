@@ -1,8 +1,8 @@
-function [axisAcuityData, locate, locateX, blankRes, blankStim] = readRawMetropsis(fname, k, locate, locateX, blankRes, blankStim)
-% Extracts data from Metropsis text file from the Peripheral Acuity Test
+function axisAcuityData = readRawMetropsis(fname, varargin)
+% Extracts data from a Metropsis text file from the Peripheral Acuity Test
 %
 % Syntax:
-%  myData = readRawMetropsis(fname)
+%  axisAcuityData = readRawMetropsis(fname)
 %
 % Description:
 %	The Metropsis system implements the Peripheral Acuity Test and outputs
@@ -10,101 +10,112 @@ function [axisAcuityData, locate, locateX, blankRes, blankStim] = readRawMetrops
 %	information into data structures.
 %
 % Inputs:
-%	fName                 - Matlab string with filename. Can be relative to
-%                           Matlab's current working directory, or
-%                           absolute.
+%	fName                 - Char vector or string. Path to the text file to
+%                           be read. Can be relative to Matlab's current
+%                           working directory, or absolute.
+%
+% Optional key-value pairs
+%  'responseColumn'       - Scalar. Specifies the column in the metropsis
+%                           data text file that contains subject responses
+%                           on each trial.
+%  'yPosColumn'           - Scalar. Column with the stimulus y position.
+%  'xPosColumn'           - Scalar. Column with the stimulus y position.
+%  'spatialFreqColumn'    - Scalar. Column with the stimulus carrier freq.
 %
 % Outputs:
-%   axisAcuityData
+%   axisAcuityData        - Structure, with the fields:
 %       posX              - Measured by degrees of eccentricity along the x
 %                           axis
 %       posY              - Measured by degrees of eccentricity along the y
 %                           axis
-%       cyclesPerDeg      - Carrier spatial frequency of stimulus
-%       response          - Hit -- 1 Miss -- 0 
+%       cyclesPerDeg      - Carrier spatial frequency of stimulus cyc/deg
+%       response          - Hit -- 1 Miss -- 0
 %
 % History:
 %    07/10/19  jen       Created module from previous code
+%    07/19/19  jen/gka   Comments and even more modular
 %
 % Examples:
 %{
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
-    locate = NaN(200,8);
-    locateX = NaN(200,8);
-    blankRes = NaN(200,8);
-    blankStim = NaN(200,8);
+    subject = 'Subject_JILL NOFZIGER';
+    acquisition = 'JILL NOFZIGER_1.txt';
     expFolderSet = {'Exp_PRCM0';'Exp_CRCM0';'Exp_PRCM4';'Exp_CRCM4';'Exp_CRCM9';'Exp_PRCM1';'Exp_CRCM1'};
-    for k = 1:8
-        expFolder = expFolderSet(k,1);
-        fnameCell = fullfile(dataBasePath,expFolder,'Subject_JILL NOFZIGER','JILL NOFZIGER_1.txt');
-        fname = char(fnameCell)
-        [axisAcuityData, locate, locateX, blankRes, blankStim] = readRawMetropsis(fname, k, locate, locateX, blankRes, blankStim)
+    for ii = 1:length(expFolderSet)
+        expFolder = expFolderSet{ii};
+        fname = fullfile(dataBasePath,expFolder,subject,acquisition);
+        tmpAcuityData = readRawMetropsis(fname);
+        if ii==1
+            axisAcuityData = tmpAcuityData;
+        else
+            axisAcuityData = cell2struct(cellfun(@vertcat,struct2cell(axisAcuityData),struct2cell(tmpAcuityData),'uni',0),fieldnames(axisAcuityData),1);
+        end
     end
+
+    % Save the axisAcuityData in the data directory for this project
+    thisFuncPath = which('readRawMetropsis');
+    tmp = strsplit(str{1},'code');
+    savePath = fullfile(tmp{1},'data',[subject,'_axisAcuityData.mat');
+    save(savePath,'axisAcuityData');
 %}
+
+
+%% Parse vargin for options passed here
+p = inputParser; p.KeepUnmatched = false;
+
+% Required
+p.addRequired('fname',@ischar);
+
+% Optional params
+p.addParameter('responseColumn',24,@isscalar);
+p.addParameter('yPosColumn',23,@isscalar);
+p.addParameter('xPosColumn',22,@isscalar);
+p.addParameter('spatialFreqColumn',12,@isscalar);
+
+
+%% Parse and check the parameters
+p.parse(fname, varargin{:});
+
+
+%% Main
+
+% Pre-allocate the return variable
 axisAcuityData = struct;
 
+% Open for reading the identified file
+fileID = fopen(fname);
 
-fid = fopen(fname);
-% Collect correct responses
+% Read in the entire contents of the text file as strings
+retrieveValueStr = readmatrix(fname, 'OutputType', 'string');
 
-    % Retrieve text from response column
-    retrieveValueStr = readmatrix(fname, 'OutputType', 'string');
-    responseTable = retrieveValueStr(:,24);
-    responseNA = rmmissing(responseTable);
-    % Delete "NA" responses
-    responseChr = responseNA(responseNA ~= 'NA');
-    % Convert string array to numeric
-    responseHex = regexprep(responseChr, 'Hit', '01');
-    responseHex2 = regexprep(responseHex, 'Miss', '00');
-    numResp = hex2dec(responseHex2);
-    
-    extSp = 200-length(numResp);
-    additionRes = NaN(extSp,1);
-    totalVecRes = [numResp;additionRes];
-    blankRes(:,k) = totalVecRes;
-    colVecRes = blankRes(:);
-    axisAcuityData.response = rmmissing(colVecRes);
-    
+% Extact the subject responses
+responseTable = retrieveValueStr(:,p.Results.responseColumn);
 
+% Delete "NA" responses
+responseNA = rmmissing(responseTable);
+responseChr = responseNA(responseNA ~= 'NA');
+
+% Convert string array to numeric and store in axisAcuityData
+responseHex = regexprep(responseChr, 'Hit', '01');
+responseHex2 = regexprep(responseHex, 'Miss', '00');
+axisAcuityData.response = hex2dec(responseHex2);
+
+% Read in the text file again, now as numeric values
 retrieveValue = readmatrix(fname);
 
-%Collect Y position
+% Extract the Y position of the stimulus
+positionYnan = retrieveValue(:,p.Results.yPosColumn);
+axisAcuityData.posY = rmmissing(positionYnan);  % Remove Nan from vector
 
-    positionYnan = retrieveValue(:,23);
-    posiY = rmmissing(positionYnan);  % Remove Nan from vector
-    extraZero = 200-length(posiY);
-    addition = NaN(extraZero,1);
-    totalVec = [posiY;addition];
-    locate(:,k) = totalVec;
-    colVec = locate(:);
-    axisAcuityData.posY = rmmissing(colVec);
-    
-   
-    
-    
-% Collect X position
-    positionXnan = retrieveValue(:,22);
-    posiX = rmmissing(positionXnan);  % Remove Nan from vector
-    extraZ = 200-length(posiX);
-    additionX = NaN(extraZ,1);
-    totalVecX = [posiX;additionX];
-    locateX(:,k) = totalVecX;
-    colVecX = locateX(:);
-    axisAcuityData.posX = rmmissing(colVecX);
+% Extract the X position of the stimulus
+positionXnan = retrieveValue(:,p.Results.xPosColumn);
+axisAcuityData.posX = rmmissing(positionXnan);  % Remove Nan from vector
 
+% Extract the carrier spatial frequency of the stimulus
+carrierSFNan = retrieveValue(:,p.Results.spatialFreqColumn);
+axisAcuityData.cyclesPerDeg = rmmissing(carrierSFNan);   % Remove Nan from vector
 
-numTrials(:,k) = length(posiX)
-% Collect spatial frequencies
-    carrierSFNan = retrieveValue(:,12);
-    carrierSFNa = rmmissing(carrierSFNan);   % Remove Nan from vector
-    cPd = carrierSFNa(carrierSFNa ~= 0);
-    snipcPd = cPd(1:numTrials,:);
-    extra = 200-length(snipcPd);
-    additionCPD = NaN(extra,1);
-    totalVecCPD = [snipcPd;additionCPD];
-    blankStim(:,k) = totalVecCPD;
-    colVecCPD = blankStim(:);
-    axisAcuityData.cyclesPerDeg = rmmissing(colVecCPD);
-
+% Close the text file file
+fclose(fileID);
 
 end
