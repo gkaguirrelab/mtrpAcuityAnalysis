@@ -38,15 +38,12 @@ end
 [~, userID] = system('whoami');
 userID = strtrim(userID);
 
+
 %% Specify the base path of the data and analysis directories
 if ismac
     % Code to run on Mac plaform
     MTRP_dataBasePath = fullfile(filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_data');
     MTRP_analysisBasePath = fullfile(filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_analysis');
-elseif isunix
-    % Code to run on Linux plaform
-    setpref(projectName,'melaDataPath', MELA_dataBasePath);
-    setpref(projectName,'melaAnalysisPath', MELA_analysisBasePath);
 elseif ispc
     % Remove windows prefix from userID
     tmp = strsplit(userID,filesep);
