@@ -40,7 +40,7 @@ function axisAcuityData = readRawMetropsis(fname, varargin)
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
     subject = 'Subject_JILL NOFZIGER';
     acquisition = 'JILL NOFZIGER_1.txt';
-    expFolderSet = {'Exp_PRCM0';'Exp_CRCM0';'Exp_PRCM4';'Exp_CRCM4';'Exp_CRCM9';'Exp_PRCM1';'Exp_CRCM1'};
+    expFolderSet = {'Exp_PRCM0';'Exp_CRCM0';'Exp_PRCM4';'Exp_CRCM4';'Exp_CRCM9';'Exp_PRCM9';'Exp_PRCM1';'Exp_CRCM1'};
     for ii = 1:length(expFolderSet)
         expFolder = expFolderSet{ii};
         fname = fullfile(dataBasePath,expFolder,subject,acquisition);
@@ -54,8 +54,8 @@ function axisAcuityData = readRawMetropsis(fname, varargin)
 
     % Save the axisAcuityData in the data directory for this project
     thisFuncPath = which('readRawMetropsis');
-    tmp = strsplit(str{1},'code');
-    savePath = fullfile(tmp{1},'data',[subject,'_axisAcuityData.mat');
+    tmp = strsplit(thisFuncPath,'code');
+    savePath = fullfile(tmp{1},'data',[subject,'_axisAcuityData.mat']);
     save(savePath,'axisAcuityData');
 %}
 
@@ -98,7 +98,10 @@ responseChr = responseNA(responseNA ~= 'NA');
 % Convert string array to numeric and store in axisAcuityData
 responseHex = regexprep(responseChr, 'Hit', '01');
 responseHex2 = regexprep(responseHex, 'Miss', '00');
-axisAcuityData.response = hex2dec(responseHex2);
+responseHex3 = regexprep(responseHex2, 'No Response', '02');
+responseDec = hex2dec(responseHex3);
+responseDec(responseDec == 2) = nan;
+axisAcuityData.response = responseDec;
 
 % Read in the text file again, now as numeric values
 retrieveValue = readmatrix(fname);
@@ -112,8 +115,14 @@ positionXnan = retrieveValue(:,p.Results.xPosColumn);
 axisAcuityData.posX = rmmissing(positionXnan);  % Remove Nan from vector
 
 % Extract the carrier spatial frequency of the stimulus
-carrierSFNan = retrieveValue(:,p.Results.spatialFreqColumn);
-axisAcuityData.cyclesPerDeg = rmmissing(carrierSFNan);   % Remove Nan from vector
+carrierSFRaw = retrieveValue(:,p.Results.spatialFreqColumn);
+carrierSFRaw = rmmissing(carrierSFRaw);   % Remove Nan from vector
+carrierSFRaw = carrierSFRaw(carrierSFRaw ~= 0); % Remove entries with zero
+% This column contains both the spatial frequency values as well as some
+% psychometric derived value. We just retain the first n rows, where n is
+% equal to the number of entries in the spatial position variables.
+carrierSFRaw = carrierSFRaw(1:length(axisAcuityData.posX));
+axisAcuityData.cyclesPerDeg = carrierSFRaw;
 
 % Close the text file file
 fclose(fileID);
