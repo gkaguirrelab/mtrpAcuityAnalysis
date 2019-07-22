@@ -41,9 +41,10 @@ userID = strtrim(userID);
 
 %% Specify the base path of the data and analysis directories
 if ismac
-    % Code to run on Mac plaform
+    % Code to run on Mac platform
     MTRP_dataBasePath = fullfile(filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_data');
     MTRP_analysisBasePath = fullfile(filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_analysis');
+    MTRP_compiledDataBasePath = fullfile(filesep,'Users',userID,'Documents', 'MATLAB', 'projects', 'mtrpAcuityAnalysis', 'data');
 elseif ispc
     % Remove windows prefix from userID
     tmp = strsplit(userID,filesep);
@@ -52,6 +53,7 @@ elseif ispc
     % Code to run on Windows platform
     MTRP_dataBasePath = fullfile('C:',filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_data');
     MTRP_analysisBasePath = fullfile('C:',filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_analysis');
+    MTRP_compiledDataBasePath = fullfile('C:',filesep,'Users',userID,'Documents', 'MATLAB', 'projects', 'mtrpAcuityAnalysis', 'data');
     
 else
     disp('What are you using?')
@@ -59,5 +61,6 @@ end
 
 %% Set the prefs
 setpref(projectName,'mtrpDataPath', MTRP_dataBasePath); 
-setpref(projectName,'mtrpAnalysisPath', MTRP_analysisBasePath); 
+setpref(projectName,'mtrpAnalysisPath', MTRP_analysisBasePath);
+setpref(projectName,'mtrpCompiledDataPath', MTRP_compiledDataBasePath);
 
