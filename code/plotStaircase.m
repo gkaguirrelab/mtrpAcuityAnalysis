@@ -69,6 +69,14 @@ idx = and((axisAcuityData.posY == p.Results.posY), (axisAcuityData.posX == p.Res
 % Plot the data and retain the handle to the plot line
 lineHandle = plot(1:sum(idx), axisAcuityData.cyclesPerDeg(idx));
 
+% Add markers for correect and incorrect trials
+% idxVals = find(idx);
+% correctIdx = axisAcuityData.response(idxVals)==1;
+% incorrectIdx = axisAcuityData.response(idxVals)==0;
+% hold on
+% plot(idxVals(correctIdx),axisAcuityData.cyclesPerDeg(idxVals(correctIdx)),'ok');
+% plot(idxVals(incorrectIdx),axisAcuityData.cyclesPerDeg(idxVals(incorrectIdx)),'xr');
+
 % Hide or show plot label elements under the control of showChartJunk
 if p.Results.showChartJunk
     xlabel('Trial number');
