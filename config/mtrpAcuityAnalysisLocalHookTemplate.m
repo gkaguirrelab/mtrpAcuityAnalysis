@@ -53,7 +53,7 @@ elseif ispc
     % Code to run on Windows platform
     MTRP_dataBasePath = fullfile('C:',filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_data');
     MTRP_analysisBasePath = fullfile('C:',filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_analysis');
-    MTRP_compiledDataBasePath = fullfile('C:',filesep,'Users',userID,'Documents', 'MATLAB', 'projects', 'mtrpAcuityAnalysis', 'data');
+    MTRP_compiledDataBasePath = fullfile('C:',filesep,'Users',userID,'Documents','MATLAB', 'projects', 'mtrpAcuityAnalysis');
     
 else
     disp('What are you using?')
