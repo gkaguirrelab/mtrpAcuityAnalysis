@@ -48,7 +48,7 @@ function [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, varargin)
 
 
 %% Parse vargin for options passed here
-p = inputParser; p.KeepUnmatched = false;
+p = inputParser; p.KeepUnmatched = true;
 
 % Required
 p.addRequired('axisAcuityData',@isstruct);
