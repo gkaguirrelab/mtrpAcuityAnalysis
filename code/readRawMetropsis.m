@@ -118,6 +118,7 @@ axisAcuityData.posX = rmmissing(positionXnan);  % Remove Nan from vector
 carrierSFRaw = retrieveValue(:,p.Results.spatialFreqColumn);
 carrierSFRaw = rmmissing(carrierSFRaw);   % Remove Nan from vector
 carrierSFRaw = carrierSFRaw(carrierSFRaw ~= 0); % Remove entries with zero
+
 % This column contains both the spatial frequency values as well as some
 % psychometric derived value. We just retain the first n rows, where n is
 % equal to the number of entries in the spatial position variables.
