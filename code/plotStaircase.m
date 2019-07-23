@@ -51,8 +51,8 @@ p = inputParser; p.KeepUnmatched = false;
 p.addRequired('axisAcuityData',@isstruct);
 
 % Optional params
-p.addParameter('posX',10,@isscalar);
-p.addParameter('posY',0,@isscalar);
+p.addParameter('posX',0,@isscalar);
+p.addParameter('posY',10,@isscalar);
 p.addParameter('showChartJunk',true,@islogical);
 
 
@@ -64,23 +64,33 @@ p.parse(axisAcuityData, varargin{:});
 
 % Find the indices in axisAcuityData with stimuli at the specified location
 % on the screen in degrees.
-idx = and((axisAcuityData.posY == p.Results.posY), (axisAcuityData.posX == p.Results.posX));
+idx = and(axisAcuityData.posY == p.Results.posY, axisAcuityData.posX == p.Results.posX);
+idxCorrect = and( and(axisAcuityData.posY == p.Results.posY, axisAcuityData.posX == p.Results.posX), axisAcuityData.response==1);
+idxIncorrect = and( and(axisAcuityData.posY == p.Results.posY, axisAcuityData.posX == p.Results.posX), axisAcuityData.response==0);
+idxNoResponse = and( and(axisAcuityData.posY == p.Results.posY, axisAcuityData.posX == p.Results.posX), isnan(axisAcuityData.response));
+trialNumber = nan(1,length(idx));
+trialNumber(find(idx)) = 1:sum(idx);
 
 % Plot the data and retain the handle to the plot line
-lineHandle = plot(1:sum(idx), axisAcuityData.cyclesPerDeg(idx));
+lineHandle = semilogy(trialNumber(idx), axisAcuityData.cyclesPerDeg(idx),'-k','LineWidth',1);
 
 % Add markers for correect and incorrect trials
-% idxVals = find(idx);
-% correctIdx = axisAcuityData.response(idxVals)==1;
-% incorrectIdx = axisAcuityData.response(idxVals)==0;
-% hold on
-% plot(idxVals(correctIdx),axisAcuityData.cyclesPerDeg(idxVals(correctIdx)),'ok');
-% plot(idxVals(incorrectIdx),axisAcuityData.cyclesPerDeg(idxVals(incorrectIdx)),'xr');
+hold on
+semilogy(trialNumber(idxCorrect),axisAcuityData.cyclesPerDeg(idxCorrect),'o','MarkerEdgeColor','green',...
+    'MarkerFaceColor','green','MarkerSize',10);
+semilogy(trialNumber(idxIncorrect),axisAcuityData.cyclesPerDeg(idxIncorrect),'x','MarkerEdgeColor','red','MarkerSize',10);
+semilogy(trialNumber(idxNoResponse),axisAcuityData.cyclesPerDeg(idxNoResponse),'s','MarkerEdgeColor','blue',...
+    'MarkerFaceColor','blue','MarkerSize',10);
+
+% Set the plot limits
+pbaspect([2 1 1])
+xlim([0.5, sum(idx)+0.5]);
+ylim([0.75, 40]);
 
 % Hide or show plot label elements under the control of showChartJunk
 if p.Results.showChartJunk
     xlabel('Trial number');
-    ylabel('Spatial freq [cycles/deg]');
+    ylabel('Log spatial freq [cycles/deg]');
 else
     axis off
 end
