@@ -51,8 +51,8 @@ p = inputParser; p.KeepUnmatched = false;
 p.addRequired('axisAcuityData',@isstruct);
 
 % Optional params
-p.addParameter('posX',0,@isscalar);
-p.addParameter('posY',10,@isscalar);
+p.addParameter('posX',0,@isnumeric);
+p.addParameter('posY',10,@isnumeric);
 p.addParameter('showChartJunk',true,@islogical);
 
 
@@ -64,10 +64,10 @@ p.parse(axisAcuityData, varargin{:});
 
 % Find the indices in axisAcuityData with stimuli at the specified location
 % on the screen in degrees.
-idx = and(axisAcuityData.posY == p.Results.posY, axisAcuityData.posX == p.Results.posX);
-idxCorrect = and( and(axisAcuityData.posY == p.Results.posY, axisAcuityData.posX == p.Results.posX), axisAcuityData.response==1);
-idxIncorrect = and( and(axisAcuityData.posY == p.Results.posY, axisAcuityData.posX == p.Results.posX), axisAcuityData.response==0);
-idxNoResponse = and( and(axisAcuityData.posY == p.Results.posY, axisAcuityData.posX == p.Results.posX), isnan(axisAcuityData.response));
+idx = and(ismember(axisAcuityData.posY, p.Results.posY), ismember(axisAcuityData.posX, p.Results.posX));
+idxCorrect = and( idx, axisAcuityData.response==1);
+idxIncorrect = and( idx, axisAcuityData.response==0);
+idxNoResponse = and( idx, isnan(axisAcuityData.response));
 trialNumber = nan(1,length(idx));
 trialNumber(find(idx)) = 1:sum(idx);
 

@@ -55,8 +55,8 @@ p.addRequired('axisAcuityData',@isstruct);
 
 % Optional params
 p.addParameter('nPerBin',10,@isscalar);
-p.addParameter('posX',0,@isscalar);
-p.addParameter('posY',10,@isscalar);
+p.addParameter('posX',0,@isnumeric);
+p.addParameter('posY',10,@isnumeric);
 
 
 %% Parse and check the parameters
@@ -66,7 +66,7 @@ p.parse(axisAcuityData, varargin{:});
 %% Obtain the vector of responses for this position
 % Find the indices in axisAcuityData with stimuli at the specified location
 % on the screen in degrees.
-idx = and(axisAcuityData.posY == p.Results.posY, axisAcuityData.posX == p.Results.posX);
+idx = and(ismember(axisAcuityData.posY, p.Results.posY), ismember(axisAcuityData.posX, p.Results.posX));
 values = axisAcuityData.cyclesPerDeg(idx);
 responses = axisAcuityData.response(idx);
 

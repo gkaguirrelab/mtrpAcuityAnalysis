@@ -51,8 +51,8 @@ p = inputParser; p.KeepUnmatched = false;
 p.addRequired('axisAcuityData',@isstruct);
 
 % Optional params
-p.addParameter('posX',0,@isscalar);
-p.addParameter('posY',10,@isscalar);
+p.addParameter('posX',0,@isnumeric);
+p.addParameter('posY',10,@isnumeric);
 p.addParameter('showChartJunk',true,@islogical);
 
 
@@ -67,6 +67,9 @@ p.parse(axisAcuityData, varargin{:});
 
 % Plot the data and retain the handle to the plot symbols
 plotHandle = scatter(binCenters, nCorrect./nTrials,nTrials*10,'red','filled');
+
+% Add a line at chance
+refline(0,0.5);
 
 % Reverse the x-axis so that performance gets better to the right
 set(gca,'xscale','log')
