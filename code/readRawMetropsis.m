@@ -38,12 +38,10 @@ function axisAcuityData = readRawMetropsis(fname, varargin)
 % Examples:
 %{
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
-    subject = 'Subject_JILL NOFZIGER';
-    acquisition = 'JILL NOFZIGER_1.txt';
-    expFolderSet = {'Exp_PRCM0';'Exp_CRCM0';'Exp_PRCM4';'Exp_CRCM4';'Exp_CRCM9';'Exp_PRCM9';'Exp_PRCM1';'Exp_CRCM1'};
-    for ii = 1:length(expFolderSet)
-        expFolder = expFolderSet{ii};
-        fname = fullfile(dataBasePath,expFolder,subject,acquisition);
+    subject = 'Subject_AOSO_11060';
+    fileList = dir(fullfile(dataBasePath,'perimetricAcuityTextFiles',['*',subject,'*']));
+    for ii = 1:length(fileList)
+        fname = fullfile(fileList(ii).folder,fileList(ii).name);
         tmpAcuityData = readRawMetropsis(fname);
         if ii==1
             axisAcuityData = tmpAcuityData;
@@ -67,9 +65,9 @@ p = inputParser; p.KeepUnmatched = false;
 p.addRequired('fname',@ischar);
 
 % Optional params
-p.addParameter('responseColumn',24,@isscalar);
-p.addParameter('yPosColumn',23,@isscalar);
-p.addParameter('xPosColumn',22,@isscalar);
+p.addParameter('responseColumn',25,@isscalar);
+p.addParameter('yPosColumn',24,@isscalar);
+p.addParameter('xPosColumn',23,@isscalar);
 p.addParameter('spatialFreqColumn',12,@isscalar);
 
 
