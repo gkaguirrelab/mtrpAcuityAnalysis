@@ -39,7 +39,7 @@ function plotHandle = plotPercentCorrectByBin(axisAcuityData, varargin)
     tmp = dir(fullfile(dataBasePath,'*_axisAcuityData.mat'));
     dataFileName = fullfile(tmp(1).folder,tmp(1).name);
     load(dataFileName,'axisAcuityData')
-    plotPercentCorrectByBin(axisAcuityData, 'showChartJunk', true);
+    plotPercentCorrectByBin(axisAcuityData, 'posX', 5, 'posY',0);
 %}
 
 
