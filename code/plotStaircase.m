@@ -20,19 +20,16 @@ function lineHandle = plotStaircase(axisAcuityData, varargin)
 %       response          - Hit -- 1 Miss -- 0
 %
 % Optional key/value pairs:
-%  'posX', 'posY'         - Scalar(s). The x and y position in degrees of
-%                           the stimuli to be plotted.
+%  'position'             - Numeric or cell array. Each entry is a 1x2
+%                           vector that provides the [x, y] position in
+%                           degrees of the stimuli to be plotted.
 %  'showChartJunk'        - Boolean. Controls if axis labels, tick marks,
 %                           etc are displayed.
 %
 % Outputs:
 %   lineHandle            - handle to line object. The plot line itself.
-%                          
-% History:
-%    07/19/19  jen       Created module from previous code
-%    07/22/19  jen, gka  Edited a bit
-% 
-% Examples 
+%
+% Examples
 %{
     % Plot a location from the first mat file in the data directory
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpCompiledDataPath');
@@ -51,8 +48,7 @@ p = inputParser; p.KeepUnmatched = false;
 p.addRequired('axisAcuityData',@isstruct);
 
 % Optional params
-p.addParameter('posX',0,@isnumeric);
-p.addParameter('posY',10,@isnumeric);
+p.addParameter('position',[0,10], @(x)(isnumeric(x) | iscell(x)));
 p.addParameter('showChartJunk',true,@islogical);
 
 
@@ -60,14 +56,29 @@ p.addParameter('showChartJunk',true,@islogical);
 p.parse(axisAcuityData, varargin{:});
 
 
-%% Main 
+%% Main
 
 % Find the indices in axisAcuityData with stimuli at the specified location
 % on the screen in degrees.
-idx = and(ismember(axisAcuityData.posY, p.Results.posY), ismember(axisAcuityData.posX, p.Results.posX));
-idxCorrect = and( idx, axisAcuityData.response==1);
-idxIncorrect = and( idx, axisAcuityData.response==0);
-idxNoResponse = and( idx, isnan(axisAcuityData.response));
+
+if isnumeric(p.Results.position)
+    position = {p.Results.position};
+else
+    position = p.Results.position;
+end
+idx = false(size(axisAcuityData.posX));
+idxCorrect = false(size(axisAcuityData.posX));
+idxIncorrect = false(size(axisAcuityData.posX));
+idxNoResponse = false(size(axisAcuityData.posX));
+for ii=1:length(position)
+    thisPos = position{ii};
+    idx(and(axisAcuityData.posX==thisPos(1), axisAcuityData.posY==thisPos(2)))=true;
+    idxCorrect(and( idx, axisAcuityData.response==1)) = true;
+    idxIncorrect(and( idx, axisAcuityData.response==0)) = true;
+    idxNoResponse(and( idx, isnan(axisAcuityData.response))) = true;
+end
+
+% Set up the x-axis support
 trialNumber = nan(1,length(idx));
 trialNumber(find(idx)) = 1:sum(idx);
 
@@ -77,7 +88,7 @@ lineHandle = semilogy(trialNumber(idx), axisAcuityData.cyclesPerDeg(idx),'-k','L
 % Add markers for correect and incorrect trials
 hold on
 semilogy(trialNumber(idxCorrect),axisAcuityData.cyclesPerDeg(idxCorrect),'o','MarkerEdgeColor','green',...
-    'MarkerFaceColor','green','MarkerSize',10);
+    'MarkerFaceColor','none','MarkerSize',10);
 semilogy(trialNumber(idxIncorrect),axisAcuityData.cyclesPerDeg(idxIncorrect),'x','MarkerEdgeColor','red','MarkerSize',10);
 semilogy(trialNumber(idxNoResponse),axisAcuityData.cyclesPerDeg(idxNoResponse),'s','MarkerEdgeColor','blue',...
     'MarkerFaceColor','blue','MarkerSize',10);

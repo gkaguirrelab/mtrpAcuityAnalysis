@@ -20,17 +20,14 @@ function plotHandle = plotPercentCorrectByBin(axisAcuityData, varargin)
 %       response          - Hit -- 1 Miss -- 0
 %
 % Optional key/value pairs:
-%  'posX', 'posY'         - Scalar(s). The x and y position in degrees of
-%                           the stimuli to be plotted.
+%  'position'             - Numeric or cell array. Each entry is a 1x2
+%                           vector that provides the [x, y] position in
+%                           degrees of the stimuli to be plotted.
 %  'showChartJunk'        - Boolean. Controls if axis labels, tick marks,
 %                           etc are displayed.
 %
 % Outputs:
 %   lineHandle            - handle to line object. The plot line itself.
-%                          
-% History:
-%    07/19/19  jen       Created module from previous code
-%    07/22/19  jen, gka  Edited a bit
 % 
 % Examples 
 %{
@@ -51,8 +48,7 @@ p = inputParser; p.KeepUnmatched = false;
 p.addRequired('axisAcuityData',@isstruct);
 
 % Optional params
-p.addParameter('posX',0,@isnumeric);
-p.addParameter('posY',10,@isnumeric);
+p.addParameter('position',[0,10], @(x)(isnumeric(x) | iscell(x)));
 p.addParameter('showChartJunk',true,@islogical);
 
 

@@ -23,10 +23,13 @@ function [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, varargin)
 %       response          - Hit -- 1 Miss -- 0
 %
 % Optional key/value pairs:
-%  'posX', 'posY'         - Scalar(s). The x and y position in degrees of
-%                           the stimuli to be plotted.
-%  'nPerBin'              - Scalar. The number of trials to attempt to
-%                           place within a bin.
+%  'position'             - Numeric or cell array. Each entry is a 1x2
+%                           vector that provides the [x, y] position in
+%                           degrees of the stimuli to be plotted.
+%  'nPerBin'              - Scalar or empty. The number of trials to 
+%                           attempt to place within a bin. If empty, then
+%                           the responses will be divided into nBins.
+%  'nBins'                - Scalar.
 %
 % Outputs:
 %   binCenters            - The center of each bin in linear spatial
@@ -54,9 +57,9 @@ p = inputParser; p.KeepUnmatched = true;
 p.addRequired('axisAcuityData',@isstruct);
 
 % Optional params
-p.addParameter('nPerBin',10,@isscalar);
-p.addParameter('posX',0,@isnumeric);
-p.addParameter('posY',10,@isnumeric);
+p.addParameter('position',[0,10], @(x)(isnumeric(x) | iscell(x)));
+p.addParameter('nPerBin', [], @(x)(isempty(x) | isscalar(x)));
+p.addParameter('nBins', 10, @isscalar);
 
 
 %% Parse and check the parameters
@@ -66,9 +69,26 @@ p.parse(axisAcuityData, varargin{:});
 %% Obtain the vector of responses for this position
 % Find the indices in axisAcuityData with stimuli at the specified location
 % on the screen in degrees.
-idx = and(ismember(axisAcuityData.posY, p.Results.posY), ismember(axisAcuityData.posX, p.Results.posX));
+if isnumeric(p.Results.position)
+    position = {p.Results.position};
+else
+    position = p.Results.position;
+end
+idx = false(size(axisAcuityData.posX));
+for ii=1:length(position)
+    thisPos = position{ii};
+    idx(and(axisAcuityData.posX==thisPos(1), axisAcuityData.posY==thisPos(2)))=true;
+end
 values = axisAcuityData.cyclesPerDeg(idx);
 responses = axisAcuityData.response(idx);
+
+
+% How many points per bin?
+if isscalar(p.Results.nPerBin)
+    nPerBin = p.Results.nPerBin;
+else
+    nPerBin = ceil(length(responses)/p.Results.nBins);
+end
 
 % Conver the values to log spatial frequeny
 logValues = log10(values);
@@ -83,7 +103,7 @@ while (outIndex <= length(sortValues))
     nCorrect(bin) = 0;
     nTrials(bin) = 0;
     binCounter = 0;
-    for i = 1:p.Results.nPerBin
+    for i = 1:nPerBin
         logBinCenters(bin) = logBinCenters(bin) + sortValues(outIndex);
         if (sortResponses(outIndex) == 1)
             nCorrect(bin) = nCorrect(bin) + 1;
