@@ -25,7 +25,7 @@ for ss=1:length(subjectIDs)
     % Loop over the sets of eccentricity positions
     threshVals = zeros(1,length(positionSets));
     for ii=1:length(positionSets)
-        figure('NumberTitle', 'off', 'Name', [subjectID ' - ' titleSets{ii}]);
+        figure('NumberTitle', 'off', 'Name', [subjectIDs{ss} ' - ' titleSets{ii}]);
         subplot(2,1,1);
         plotStaircase(axisAcuityData, positionSets{ii});
         subplot(2,1,2);
