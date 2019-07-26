@@ -1,4 +1,4 @@
-function plotHandle = plotPercentCorrectByBin(axisAcuityData, position, varargin)
+function threshVal = plotPercentCorrectByBin(axisAcuityData, position, varargin)
 % Plots the contents of axisAcuityData as a staircase for one location
 %
 % Syntax:
@@ -27,7 +27,8 @@ function plotHandle = plotPercentCorrectByBin(axisAcuityData, position, varargin
 %                           etc are displayed.
 %
 % Outputs:
-%   lineHandle            - handle to line object. The plot line itself.
+%   threshVal             - Scalar. The stimulus value, in cycles/deg,
+%                           estimated to produce 50% accuracy.
 % 
 % Examples 
 %{
@@ -36,7 +37,7 @@ function plotHandle = plotPercentCorrectByBin(axisAcuityData, position, varargin
     tmp = dir(fullfile(dataBasePath,'*_axisAcuityData.mat'));
     dataFileName = fullfile(tmp(1).folder,tmp(1).name);
     load(dataFileName,'axisAcuityData')
-    plotPercentCorrectByBin(axisAcuityData, 'posX', 5, 'posY',0);
+    plotPercentCorrectByBin(axisAcuityData,[5 0]);
 %}
 
 
@@ -64,13 +65,13 @@ p.parse(axisAcuityData, position, varargin{:});
 [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, position, varargin{:});
 
 % Get the palamedes fit to the data
-[paramValues, modelFitFunc]  = fitPalamedes(axisAcuityData, position);
+[~, modelFitFunc]  = fitPalamedes(axisAcuityData, position);
 
 % Figure out how big to make the symbols
 symbolSize = 100./(nTrials./max(nTrials));
 
 % Plot the data and retain the handle to the plot symbols
-plotHandle = scatter(binCenters, nCorrect./nTrials, symbolSize,'red','filled');
+scatter(binCenters, nCorrect./nTrials, symbolSize,'red','filled');
 
 % Add a line at chance
 hold on
@@ -80,10 +81,10 @@ plot(p.Results.xDomain,[0.5,0.5],':b');
 fineSupport = logspace(log10(p.Results.xDomain(1)),log10(p.Results.xDomain(2)));
 plot(fineSupport,modelFitFunc(fineSupport),'-k');
 
-% Add the threshold value to the plot
-threshVal = 1/10.^paramValues(1);
+% Determine the 50% performance point
+myObj = @(x) modelFitFunc(x)-0.5;
+threshVal = fzero(myObj,10);
 plot([threshVal threshVal],[0 modelFitFunc(threshVal)],'--k');
-plot([p.Results.xDomain(2) threshVal],[modelFitFunc(threshVal) modelFitFunc(threshVal)],'--k');
 plot(threshVal,modelFitFunc(threshVal),'xk');
 
 % Reverse the x-axis so that performance gets better to the right
