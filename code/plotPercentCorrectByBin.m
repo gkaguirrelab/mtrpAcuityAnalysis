@@ -1,4 +1,4 @@
-function threshVal = plotPercentCorrectByBin(axisAcuityData, position, varargin)
+function [threshVal, threshValCI] = plotPercentCorrectByBin(axisAcuityData, position, varargin)
 % Plots the contents of axisAcuityData as a staircase for one location
 %
 % Syntax:
@@ -52,7 +52,9 @@ p.addRequired('position', @(x)(isnumeric(x) | iscell(x)));
 % Optional params
 p.addParameter('showChartJunk',true,@islogical);
 p.addParameter('plotSymbolMaxSize',100,@isscalar);
-p.addParameter('xDomain',[0.75 40],@isscalar);
+p.addParameter('xDomain',[0.75 40],@isnumeric);
+p.addParameter('calcThreshCI',false,@islogical);
+p.addParameter('nBoots',1000,@isscalar);
 
 
 %% Parse and check the parameters
@@ -65,7 +67,11 @@ p.parse(axisAcuityData, position, varargin{:});
 [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, position, varargin{:});
 
 % Get the palamedes fit to the data
-[~, modelFitFunc]  = fitPalamedes(axisAcuityData, position);
+if p.Results.calcThreshCI
+    [modelFitFunc, paramsValues, paramsValuesSD]  = fitPalamedes(axisAcuityData, position, 'calcSD', true);
+else
+    [modelFitFunc, paramsValues, paramsValuesSD]  = fitPalamedes(axisAcuityData, position, 'calcSD', false);
+end
 
 % Figure out how big to make the symbols
 symbolSize = 100./(nTrials./max(nTrials));
@@ -79,20 +85,32 @@ plot(p.Results.xDomain,[0.5,0.5],':b');
 
 % Add the logisitic fit
 fineSupport = logspace(log10(p.Results.xDomain(1)),log10(p.Results.xDomain(2)));
-plot(fineSupport,modelFitFunc(fineSupport),'-k');
+plot(fineSupport,modelFitFunc(paramsValues, fineSupport),'-k');
 
 % Determine the 50% performance point
-myObj = @(x) modelFitFunc(x)-0.5;
-threshVal = fzero(myObj,10);
-plot([threshVal threshVal],[0 modelFitFunc(threshVal)],'--k');
-plot(threshVal,modelFitFunc(threshVal),'xk');
+threshVal = findThresh(paramsValues, modelFitFunc);
+plot([threshVal threshVal],[0 0.5],'--k');
+plot(threshVal,0.5,'xk');
+
+% Boot-strap resample to get a confidence interval on the threshold
+if p.Results.calcThreshCI
+    threshValBoots = nan(1,1000);
+    for bb=1:p.Results.nBoots
+        threshValBoots(bb)=findThresh(normrnd(paramsValues, paramsValuesSD),modelFitFunc);
+    end
+    threshValSort = sort(threshValBoots);
+    threshValCI(1) = threshValSort(round(sum(~isnan(threshValSort))*0.05));
+    threshValCI(2) = threshValSort(round(sum(~isnan(threshValSort))*0.95));
+    
+    plot(threshValCI,[0.5 0.5],'-r');
+end
 
 % Reverse the x-axis so that performance gets better to the right
 set(gca,'xscale','log')
 set(gca, 'XDir','reverse')
 
 % Set the plot limits
-pbaspect([2 1 1])
+pbaspect([3 1 1])
 ylim([0 1]);
 xlim(p.Results.xDomain);
 
@@ -104,4 +122,11 @@ else
     axis off
 end
 
+end
+
+
+function threshVal = findThresh(paramsValues, modelFitFunc)
+myObj = @(x) (modelFitFunc(paramsValues,x)-0.5);
+options = optimset('Display','off');
+threshVal = fzero(myObj,10,options);
 end
