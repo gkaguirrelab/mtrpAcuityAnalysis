@@ -1,4 +1,4 @@
-function plotHandle = plotPercentCorrectByBin(axisAcuityData, varargin)
+function plotHandle = plotPercentCorrectByBin(axisAcuityData, position, varargin)
 % Plots the contents of axisAcuityData as a staircase for one location
 %
 % Syntax:
@@ -12,17 +12,17 @@ function plotHandle = plotPercentCorrectByBin(axisAcuityData, varargin)
 %
 % Inputs:
 %   axisAcuityData        - Structure, with the fields:
-%       posX              - Measured by degrees of eccentricity along the x
-%                           axis
-%       posY              - Measured by degrees of eccentricity along the y
-%                           axis
-%       cyclesPerDeg      - Carrier spatial frequency of stimulus cyc/deg
-%       response          - Hit -- 1 Miss -- 0
-%
-% Optional key/value pairs:
-%  'position'             - Numeric or cell array. Each entry is a 1x2
+%       posX                - Measured by degrees of eccentricity along the
+%                             x-axis
+%       posY                - Measured by degrees of eccentricity along the
+%                             y-axis
+%       cyclesPerDeg        - Carrier spatial frequency of stimulus cyc/deg
+%       response            - Hit -- 1 Miss -- 0
+%   position              - Numeric or cell array. Each entry is a 1x2
 %                           vector that provides the [x, y] position in
 %                           degrees of the stimuli to be plotted.
+%
+% Optional key/value pairs:
 %  'showChartJunk'        - Boolean. Controls if axis labels, tick marks,
 %                           etc are displayed.
 %
@@ -46,21 +46,25 @@ p = inputParser; p.KeepUnmatched = false;
 
 % Required
 p.addRequired('axisAcuityData',@isstruct);
+p.addRequired('position', @(x)(isnumeric(x) | iscell(x)));
 
 % Optional params
-p.addParameter('position',[0,10], @(x)(isnumeric(x) | iscell(x)));
 p.addParameter('showChartJunk',true,@islogical);
 p.addParameter('plotSymbolMaxSize',100,@isscalar);
+p.addParameter('xDomain',[0.75 40],@isscalar);
 
 
 %% Parse and check the parameters
-p.parse(axisAcuityData, varargin{:});
+p.parse(axisAcuityData, position, varargin{:});
 
 
 %% Main 
 
 % Get bins
-[binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, varargin{:});
+[binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, position, varargin{:});
+
+% Get the palamedes fit to the data
+[paramValues, modelFitFunc]  = fitPalamedes(axisAcuityData, position);
 
 % Figure out how big to make the symbols
 symbolSize = 100./(nTrials./max(nTrials));
@@ -69,7 +73,13 @@ symbolSize = 100./(nTrials./max(nTrials));
 plotHandle = scatter(binCenters, nCorrect./nTrials, symbolSize,'red','filled');
 
 % Add a line at chance
-refline(0,0.5);
+hold on
+plot(p.Results.xDomain,[0.5,0.5],'--b');
+
+% Add the logisitic fit
+fineSupport = logspace(log10(p.Results.xDomain(1)),log10(p.Results.xDomain(2)));
+plot(fineSupport,modelFitFunc(fineSupport),'.k');
+
 
 % Reverse the x-axis so that performance gets better to the right
 set(gca,'xscale','log')
@@ -78,7 +88,7 @@ set(gca, 'XDir','reverse')
 % Set the plot limits
 pbaspect([2 1 1])
 ylim([0 1]);
-xlim([0.75, 40]);
+xlim(p.Results.xDomain);
 
 % Hide or show plot label elements under the control of showChartJunk
 if p.Results.showChartJunk

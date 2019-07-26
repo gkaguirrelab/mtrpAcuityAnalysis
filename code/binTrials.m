@@ -1,4 +1,4 @@
-function [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, varargin)
+function [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, position, varargin)
 % Place staircase performance vector into evenly (log) spaced bins
 %
 % Syntax:
@@ -15,17 +15,17 @@ function [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, varargin)
 %
 % Inputs:
 %   axisAcuityData        - Structure, with the fields:
-%       posX              - Measured by degrees of eccentricity along the x
-%                           axis
-%       posY              - Measured by degrees of eccentricity along the y
-%                           axis
-%       cyclesPerDeg      - Carrier spatial frequency of stimulus cyc/deg
-%       response          - Hit -- 1 Miss -- 0
-%
-% Optional key/value pairs:
-%  'position'             - Numeric or cell array. Each entry is a 1x2
+%       posX                - Measured by degrees of eccentricity along the
+%                             x-axis
+%       posY                - Measured by degrees of eccentricity along the
+%                             y-axis
+%       cyclesPerDeg        - Carrier spatial frequency of stimulus cyc/deg
+%       response            - Hit -- 1 Miss -- 0
+%   position              - Numeric or cell array. Each entry is a 1x2
 %                           vector that provides the [x, y] position in
 %                           degrees of the stimuli to be plotted.
+%
+% Optional key/value pairs:
 %  'nPerBin'              - Scalar or empty. The number of trials to 
 %                           attempt to place within a bin. If empty, then
 %                           the responses will be divided into nBins.
@@ -55,33 +55,23 @@ p = inputParser; p.KeepUnmatched = true;
 
 % Required
 p.addRequired('axisAcuityData',@isstruct);
+p.addRequired('position', @(x)(isnumeric(x) | iscell(x)));
 
 % Optional params
-p.addParameter('position',[0,10], @(x)(isnumeric(x) | iscell(x)));
 p.addParameter('nPerBin', [], @(x)(isempty(x) | isscalar(x)));
 p.addParameter('nBins', 10, @isscalar);
 
 
 %% Parse and check the parameters
-p.parse(axisAcuityData, varargin{:});
+p.parse(axisAcuityData, position, varargin{:});
 
 
 %% Obtain the vector of responses for this position
 % Find the indices in axisAcuityData with stimuli at the specified location
 % on the screen in degrees.
-if isnumeric(p.Results.position)
-    position = {p.Results.position};
-else
-    position = p.Results.position;
-end
-idx = false(size(axisAcuityData.posX));
-for ii=1:length(position)
-    thisPos = position{ii};
-    idx(and(axisAcuityData.posX==thisPos(1), axisAcuityData.posY==thisPos(2)))=true;
-end
+idx = getIndicies(axisAcuityData, position, varargin{:});
 values = axisAcuityData.cyclesPerDeg(idx);
 responses = axisAcuityData.response(idx);
-
 
 % How many points per bin?
 if isscalar(p.Results.nPerBin)

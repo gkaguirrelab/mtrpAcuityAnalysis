@@ -1,4 +1,4 @@
-function [paramsValues, paramsValuesSD, pValue]  = fitPalamedes(axisAcuityData,varargin)
+function [paramsValues, modelFitFunc, paramsValuesSD, pValue]  = fitPalamedes(axisAcuityData, position, varargin)
 % Plots the contents of axisAcuityData as a staircase for one location
 %
 % Syntax:
@@ -11,18 +11,19 @@ function [paramsValues, paramsValuesSD, pValue]  = fitPalamedes(axisAcuityData,v
 %   axis.
 %
 % Inputs:
+% Inputs:
 %   axisAcuityData        - Structure, with the fields:
-%       posX              - Measured by degrees of eccentricity along the x
-%                           axis
-%       posY              - Measured by degrees of eccentricity along the y
-%                           axis
-%       cyclesPerDeg      - Carrier spatial frequency of stimulus cyc/deg
-%       response          - Hit -- 1 Miss -- 0
-%
-% Optional key/value pairs:
-%  'position'             - Numeric or cell array. Each entry is a 1x2
+%       posX                - Measured by degrees of eccentricity along the
+%                             x-axis
+%       posY                - Measured by degrees of eccentricity along the
+%                             y-axis
+%       cyclesPerDeg        - Carrier spatial frequency of stimulus cyc/deg
+%       response            - Hit -- 1 Miss -- 0
+%   position              - Numeric or cell array. Each entry is a 1x2
 %                           vector that provides the [x, y] position in
 %                           degrees of the stimuli to be plotted.
+%
+% Optional key/value pairs:
 %  'fitFunction'          - Function handle. Options include: @...
 %                           PAL_Logistic, PAL_Gumbel, PAL_Weibull,
 %                           PAL_Quick, PAL_logQuick, PAL_CumulativeNormal,
@@ -42,23 +43,23 @@ p = inputParser; p.KeepUnmatched = false;
 
 % Required
 p.addRequired('axisAcuityData',@isstruct);
+p.addRequired('position', @(x)(isnumeric(x) | iscell(x)));
 
 % Optional params
-p.addParameter('position',[0,10], @(x)(isnumeric(x) | iscell(x)));
-p.addParameter('calcSD',true, @islogical);
-p.addParameter('calcPValue',true, @islogical);
+p.addParameter('calcSD',false, @islogical);
+p.addParameter('calcPValue',false, @islogical);
 p.addParameter('fitFunction',@PAL_Logistic, @(x) (isa(x,'function_handle')));
 
 
 %% Parse and check the parameters
-p.parse(axisAcuityData, varargin{:});
+p.parse(axisAcuityData, position, varargin{:});
 
 
 %% Main
 
 
 % Get bins
-[binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, varargin{:});
+[binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, position, varargin{:});
 
 % Express stimulus level as the reciprocal of log10 binCenters
 stimulusLevel = log10(1./binCenters);
@@ -74,7 +75,7 @@ searchGrid.beta = logspace(0,3,101);
 searchGrid.gamma = 0.5;  %scalar here (since fixed) but may be vector
 searchGrid.lambda = 0.02;  %ditto
 
-%Perform fit
+% Perform fit
 paramsValues = PAL_PFML_Fit(stimulusLevel,nCorrect, ...
     nTrials,searchGrid,paramsFree,p.Results.fitFunction);
 
@@ -100,6 +101,10 @@ if p.Results.calcPValue
 else
     pValue = [];
 end
+
+% Create an anonymous function that takes cycles/deg input, converts to
+% log10 reciprocal cycles/deg, and then returns the proportion correct.
+modelFitFunc = @(x) p.Results.fitFunction(paramsValues,log10(1./x));
 
 % Restore the warning state
 warning(warnState);

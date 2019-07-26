@@ -1,4 +1,4 @@
-function lineHandle = plotStaircase(axisAcuityData, varargin)
+function lineHandle = plotStaircase(axisAcuityData, position, varargin)
 % Plots the contents of axisAcuityData as a staircase for one location
 %
 % Syntax:
@@ -12,17 +12,17 @@ function lineHandle = plotStaircase(axisAcuityData, varargin)
 %
 % Inputs:
 %   axisAcuityData        - Structure, with the fields:
-%       posX              - Measured by degrees of eccentricity along the x
-%                           axis
-%       posY              - Measured by degrees of eccentricity along the y
-%                           axis
-%       cyclesPerDeg      - Carrier spatial frequency of stimulus cyc/deg
-%       response          - Hit -- 1 Miss -- 0
-%
-% Optional key/value pairs:
-%  'position'             - Numeric or cell array. Each entry is a 1x2
+%       posX                - Measured by degrees of eccentricity along the
+%                             x-axis
+%       posY                - Measured by degrees of eccentricity along the
+%                             y-axis
+%       cyclesPerDeg        - Carrier spatial frequency of stimulus cyc/deg
+%       response            - Hit -- 1 Miss -- 0
+%   position              - Numeric or cell array. Each entry is a 1x2
 %                           vector that provides the [x, y] position in
 %                           degrees of the stimuli to be plotted.
+%
+% Optional key/value pairs:
 %  'showChartJunk'        - Boolean. Controls if axis labels, tick marks,
 %                           etc are displayed.
 %
@@ -46,38 +46,30 @@ p = inputParser; p.KeepUnmatched = false;
 
 % Required
 p.addRequired('axisAcuityData',@isstruct);
+p.addRequired('position', @(x)(isnumeric(x) | iscell(x)));
 
 % Optional params
-p.addParameter('position',[0,10], @(x)(isnumeric(x) | iscell(x)));
+p.addParameter('posMatchTolerance',0.1, @isscalar);
 p.addParameter('showChartJunk',true,@islogical);
 
 
 %% Parse and check the parameters
-p.parse(axisAcuityData, varargin{:});
+p.parse(axisAcuityData, position, varargin{:});
 
 
 %% Main
 
+%% Obtain the vector of responses for this position
 % Find the indices in axisAcuityData with stimuli at the specified location
 % on the screen in degrees.
-
-if isnumeric(p.Results.position)
-    position = {p.Results.position};
-else
-    position = p.Results.position;
-end
-idx = false(size(axisAcuityData.posX));
+idx = getIndicies(axisAcuityData, position, varargin{:});
 idxCorrect = false(size(axisAcuityData.posX));
 idxIncorrect = false(size(axisAcuityData.posX));
 idxNoResponse = false(size(axisAcuityData.posX));
-for ii=1:length(position)
-    thisPos = position{ii};
-    idx(and(axisAcuityData.posX==thisPos(1), axisAcuityData.posY==thisPos(2)))=true;
-    idxCorrect(and( idx, axisAcuityData.response==1)) = true;
-    idxIncorrect(and( idx, axisAcuityData.response==0)) = true;
-    idxNoResponse(and( idx, isnan(axisAcuityData.response))) = true;
-end
-
+idxCorrect(and( idx, axisAcuityData.response==1)) = true;
+idxIncorrect(and( idx, axisAcuityData.response==0)) = true;
+idxNoResponse(and( idx, isnan(axisAcuityData.response))) = true;
+    
 % Set up the x-axis support
 trialNumber = nan(1,length(idx));
 trialNumber(idx) = 1:sum(idx);
