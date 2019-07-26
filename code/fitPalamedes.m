@@ -1,16 +1,14 @@
 function [paramsValues, modelFitFunc, paramsValuesSD, pValue]  = fitPalamedes(axisAcuityData, position, varargin)
-% Plots the contents of axisAcuityData as a staircase for one location
+% Fit psychometric function to the acuity data at a position
 %
 % Syntax:
-%   foo = fitPalamedes(binCenters,nCorrect,nTrials,varargin)
+%   [paramsValues, modelFitFunc, paramsValuesSD, pValue]  = fitPalamedes(axisAcuityData, position)
 %
 % Description:
-%   Uses the data structure axisAcuityData to create a graph of stimulus
-%   carrier frequency (in cycles per degree) over time (measured by trial
-%   number) in one location given by degrees in eccentricity on the X and Y
-%   axis.
+%   Uses the data structure axisAcuityData at specified positions to
+%   calculate a psychometric function fit to the binned data using the
+%   Palamedes toolbox.
 %
-% Inputs:
 % Inputs:
 %   axisAcuityData        - Structure, with the fields:
 %       posX                - Measured by degrees of eccentricity along the
@@ -28,9 +26,22 @@ function [paramsValues, modelFitFunc, paramsValuesSD, pValue]  = fitPalamedes(ax
 %                           PAL_Logistic, PAL_Gumbel, PAL_Weibull,
 %                           PAL_Quick, PAL_logQuick, PAL_CumulativeNormal,
 %                           PAL_HyperbolicSecant
+%  'searchGrid'           - Structure. Fields depend upon the fitFunction.
+%                           These are the ranges of values that are used
+%                           for an initial, brute force search to
+%                           initialize the fitting routine.
+%  'calcSD'               - Logical. Controls if a non-parametric, boot-
+%                           strap calculation of parameter SDs is performed
+%  'calcPValue'           - Logical. Controls if a goodness-of-fit
+%                           procedure is performed to obtain a p-value.
 %
 % Outputs:
-%   lineHandle            - handle to line object. The plot line itself.
+%   paramsValues          - 1xn vector of model fit parameter values.
+%   modelFitFunc          - Handle to anonymous function that takes as
+%                           input spatial frequency in cycles/deg and
+%                           returns the expected percentage correct.
+%   paramsValuesSD        - 1xn vector of SD values for the params.
+%   pValue                - Scalar. p-value of the model fit.
 %
 % Examples
 %{
@@ -46,10 +57,13 @@ p.addRequired('axisAcuityData',@isstruct);
 p.addRequired('position', @(x)(isnumeric(x) | iscell(x)));
 
 % Optional params
+p.addParameter('fitFunction',@PAL_Logistic, @(x) (isa(x,'function_handle')));
+p.addParameter('searchGrid',struct(...
+    'alpha',-1:0.2:1,'beta',logspace(0,2,10),...
+    'gamma',0.1:0.1:1,'lambda',0.02),@isstruct);
+p.addParameter('paramsFree', [1 1 1 0], @isnumeric);
 p.addParameter('calcSD',false, @islogical);
 p.addParameter('calcPValue',false, @islogical);
-p.addParameter('fitFunction',@PAL_Logistic, @(x) (isa(x,'function_handle')));
-
 
 %% Parse and check the parameters
 p.parse(axisAcuityData, position, varargin{:});
@@ -57,27 +71,17 @@ p.parse(axisAcuityData, position, varargin{:});
 
 %% Main
 
-
 % Get bins
 [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, position, varargin{:});
 
 % Express stimulus level as the reciprocal of log10 binCenters
 stimulusLevel = log10(1./binCenters);
 
-%Threshold and Slope are free parameters, guess and lapse rate are fixed
-paramsFree = [1 1 1 0];  %1: free parameter, 0: fixed parameter
-
-%Parameter grid defining parameter space through which to perform a
-%brute-force search for values to be used as initial guesses in iterative
-%parameter search.
-searchGrid.alpha = 0.01:.001:.11;
-searchGrid.beta = logspace(0,3,101);
-searchGrid.gamma = 0.5;  %scalar here (since fixed) but may be vector
-searchGrid.lambda = 0.02;  %ditto
-
 % Perform fit
-paramsValues = PAL_PFML_Fit(stimulusLevel,nCorrect, ...
-    nTrials,searchGrid,paramsFree,p.Results.fitFunction);
+paramsValues = PAL_PFML_Fit(stimulusLevel, nCorrect, nTrials, ...
+    p.Results.searchGrid, ...
+    p.Results.paramsFree, ...
+    p.Results.fitFunction);
 
 % Turn off some Palamedes warnings
 warnState = warning('off','PALAMEDES:convergeFail');
@@ -86,7 +90,7 @@ warnState = warning('off','PALAMEDES:convergeFail');
 if p.Results.calcSD
     nBootStrapsSD=400;
     paramsValuesSD = PAL_PFML_BootstrapNonParametric(...
-        stimulusLevel, nCorrect, nTrials, [], paramsFree, nBootStrapsSD, ...
+        stimulusLevel, nCorrect, nTrials, [], p.Results.paramsFree, nBootStrapsSD, ...
         p.Results.fitFunction,...
         'searchGrid',searchGrid);
 else
@@ -97,7 +101,7 @@ end
 if p.Results.calcPValue
     nBootStrapsSD=1000;
         [~, pValue] = PAL_PFML_GoodnessOfFit(stimulusLevel, nCorrect, nTrials, ...
-    paramsValues, paramsFree, nBootStrapsSD, p.Results.fitFunction, 'searchGrid', searchGrid);
+    paramsValues, p.Results.paramsFree, nBootStrapsSD, p.Results.fitFunction, 'searchGrid', p.Results.searchGrid);
 else
     pValue = [];
 end

@@ -74,12 +74,17 @@ plotHandle = scatter(binCenters, nCorrect./nTrials, symbolSize,'red','filled');
 
 % Add a line at chance
 hold on
-plot(p.Results.xDomain,[0.5,0.5],'--b');
+plot(p.Results.xDomain,[0.5,0.5],':b');
 
 % Add the logisitic fit
 fineSupport = logspace(log10(p.Results.xDomain(1)),log10(p.Results.xDomain(2)));
-plot(fineSupport,modelFitFunc(fineSupport),'.k');
+plot(fineSupport,modelFitFunc(fineSupport),'-k');
 
+% Add the threshold value to the plot
+threshVal = 1/10.^paramValues(1);
+plot([threshVal threshVal],[0 modelFitFunc(threshVal)],'--k');
+plot([p.Results.xDomain(2) threshVal],[modelFitFunc(threshVal) modelFitFunc(threshVal)],'--k');
+plot(threshVal,modelFitFunc(threshVal),'xk');
 
 % Reverse the x-axis so that performance gets better to the right
 set(gca,'xscale','log')
