@@ -36,7 +36,7 @@ function lineHandle = plotStaircase(axisAcuityData, position, varargin)
     tmp = dir(fullfile(dataBasePath,'*_axisAcuityData.mat'));
     dataFileName = fullfile(tmp(1).folder,tmp(1).name);
     load(dataFileName,'axisAcuityData')
-    plotStaircase(axisAcuityData, 'posX', 5, 'posY',0);
+    plotStaircase(axisAcuityData,[5 0]);
 %}
 
 
