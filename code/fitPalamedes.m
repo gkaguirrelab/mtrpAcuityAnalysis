@@ -8,6 +8,12 @@ function [paramsValues, modelFitFunc, paramsValuesSD, pValue]  = fitPalamedes(ax
 %   Uses the data structure axisAcuityData at specified positions to
 %   calculate a psychometric function fit to the binned data using the
 %   Palamedes toolbox.
+%  
+%   For the logisitic model fit, the parameters are:
+%       alpha - half-way point between the max and min performance
+%       beta - slope
+%       gamma - guess rate
+%       labda - lapse rate
 %
 % Inputs:
 %   axisAcuityData        - Structure, with the fields:
@@ -60,8 +66,7 @@ p.addRequired('position', @(x)(isnumeric(x) | iscell(x)));
 p.addParameter('fitFunction',@PAL_Logistic, @(x) (isa(x,'function_handle')));
 p.addParameter('searchGrid',struct(...
     'alpha',-1:0.2:1,'beta',logspace(0,2,10),...
-    'gamma',0.1:0.1:1,'lambda',0.02),@isstruct);
-p.addParameter('paramsFree', [1 1 1 0], @isnumeric);
+    'gamma',0:0.1:0.4,'lambda',0:0.025:0.1),@isstruct);
 p.addParameter('calcSD',false, @islogical);
 p.addParameter('calcPValue',false, @islogical);
 
@@ -80,8 +85,10 @@ stimulusLevel = log10(1./binCenters);
 % Perform fit
 paramsValues = PAL_PFML_Fit(stimulusLevel, nCorrect, nTrials, ...
     p.Results.searchGrid, ...
-    p.Results.paramsFree, ...
-    p.Results.fitFunction);
+    [1 1 1 1], ...
+    p.Results.fitFunction, ...
+    'guessLimits',[0 0.4],...
+    'lapseLimits',[0 0.1]);
 
 % Turn off some Palamedes warnings
 warnState = warning('off','PALAMEDES:convergeFail');
