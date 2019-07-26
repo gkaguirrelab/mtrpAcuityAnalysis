@@ -50,6 +50,7 @@ p.addRequired('axisAcuityData',@isstruct);
 % Optional params
 p.addParameter('position',[0,10], @(x)(isnumeric(x) | iscell(x)));
 p.addParameter('showChartJunk',true,@islogical);
+p.addParameter('plotSymbolMaxSize',100,@isscalar);
 
 
 %% Parse and check the parameters
@@ -61,8 +62,11 @@ p.parse(axisAcuityData, varargin{:});
 % Get bins
 [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, varargin{:});
 
+% Figure out how big to make the symbols
+symbolSize = 100./(nTrials./max(nTrials));
+
 % Plot the data and retain the handle to the plot symbols
-plotHandle = scatter(binCenters, nCorrect./nTrials,nTrials*10,'red','filled');
+plotHandle = scatter(binCenters, nCorrect./nTrials, symbolSize,'red','filled');
 
 % Add a line at chance
 refline(0,0.5);

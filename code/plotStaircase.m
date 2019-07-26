@@ -80,7 +80,7 @@ end
 
 % Set up the x-axis support
 trialNumber = nan(1,length(idx));
-trialNumber(find(idx)) = 1:sum(idx);
+trialNumber(idx) = 1:sum(idx);
 
 % Plot the data and retain the handle to the plot line
 lineHandle = semilogy(trialNumber(idx), axisAcuityData.cyclesPerDeg(idx),'-k','LineWidth',1);
