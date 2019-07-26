@@ -1,8 +1,8 @@
-function foo = fitPalamedes(axisAcuityData, varargin)
+function [paramsValues, paramsValuesSD, pValue]  = fitPalamedes(axisAcuityData,varargin)
 % Plots the contents of axisAcuityData as a staircase for one location
 %
 % Syntax:
-%   lineHandle = plotPercentCorrectByBin(axisAcuityData)
+%   foo = fitPalamedes(binCenters,nCorrect,nTrials,varargin)
 %
 % Description:
 %   Uses the data structure axisAcuityData to create a graph of stimulus
@@ -20,22 +20,19 @@ function foo = fitPalamedes(axisAcuityData, varargin)
 %       response          - Hit -- 1 Miss -- 0
 %
 % Optional key/value pairs:
-%  'posX', 'posY'         - Scalar(s). The x and y position in degrees of
-%                           the stimuli to be plotted.
-%  'showChartJunk'        - Boolean. Controls if axis labels, tick marks,
-%                           etc are displayed.
+%  'position'             - Numeric or cell array. Each entry is a 1x2
+%                           vector that provides the [x, y] position in
+%                           degrees of the stimuli to be plotted.
+%  'fitFunction'          - Function handle. Options include: @...
+%                           PAL_Logistic, PAL_Gumbel, PAL_Weibull,
+%                           PAL_Quick, PAL_logQuick, PAL_CumulativeNormal,
+%                           PAL_HyperbolicSecant
 %
 % Outputs:
 %   lineHandle            - handle to line object. The plot line itself.
-%                          
-% Examples 
+%
+% Examples
 %{
-    % Plot a location from the first mat file in the data directory
-    dataBasePath = getpref('mtrpAcuityAnalysis','mtrpCompiledDataPath');
-    tmp = dir(fullfile(dataBasePath,'*_axisAcuityData.mat'));
-    dataFileName = fullfile(tmp(1).folder,tmp(1).name);
-    load(dataFileName,'axisAcuityData')
-    plotPercentCorrectByBin(axisAcuityData, 'showChartJunk', true);
 %}
 
 
@@ -47,71 +44,64 @@ p = inputParser; p.KeepUnmatched = false;
 p.addRequired('axisAcuityData',@isstruct);
 
 % Optional params
-p.addParameter('posX',0,@isscalar);
-p.addParameter('posY',10,@isscalar);
-p.addParameter('showChartJunk',true,@islogical);
+p.addParameter('position',[0,10], @(x)(isnumeric(x) | iscell(x)));
+p.addParameter('calcSD',true, @islogical);
+p.addParameter('calcPValue',true, @islogical);
+p.addParameter('fitFunction',@PAL_Logistic, @(x) (isa(x,'function_handle')));
 
 
 %% Parse and check the parameters
 p.parse(axisAcuityData, varargin{:});
 
 
-%% Main 
+%% Main
 
 
-%% Obtain the vector of responses for this position
-% Find the indices in axisAcuityData with stimuli at the specified location
-% on the screen in degrees.
-idx = and(axisAcuityData.posY == p.Results.posY, axisAcuityData.posX == p.Results.posX);
-values = axisAcuityData.cyclesPerDeg(idx);
-responses = axisAcuityData.response(idx);
+% Get bins
+[binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, varargin{:});
 
+% Express stimulus level as the reciprocal of log10 binCenters
+stimulusLevel = log10(1./binCenters);
 
+%Threshold and Slope are free parameters, guess and lapse rate are fixed
+paramsFree = [1 1 1 0];  %1: free parameter, 0: fixed parameter
 
-% Palamedes fit
-%
-% Fit with Palemedes Toolbox.  The parameter constraints match the psignifit parameters above. Again, some
-% thought is required to initialize reasonably.  The threshold parameter is reasonably taken to be in the
-% range of the comparison stimuli, where here 0 means that the comparison is the same as the test.  The 
-% second parameter should be on the order of 1/2, so we just hard code that.  As with Y/N, really want to 
-% plot the fit against the data to make sure it is reasonable in practice.
+%Parameter grid defining parameter space through which to perform a
+%brute-force search for values to be used as initial guesses in iterative
+%parameter search.
+searchGrid.alpha = 0.01:.001:.11;
+searchGrid.beta = logspace(0,3,101);
+searchGrid.gamma = 0.5;  %scalar here (since fixed) but may be vector
+searchGrid.lambda = 0.02;  %ditto
 
-% Define what psychometric functional form to fit.
-%
-% Alternatives: PAL_Gumbel, PAL_Weibull, PAL_CumulativeNormal, PAL_HyperbolicSecant
-PF = @PAL_Weibull;                  
+%Perform fit
+paramsValues = PAL_PFML_Fit(stimulusLevel,nCorrect, ...
+    nTrials,searchGrid,paramsFree,p.Results.fitFunction);
 
-% The first two parameters of the Weibull define its shape.
-%
-% The third is the guess rate, which determines the value the function
-% takes on at x = 0.  For TAFC, this should be locked at 0.5.
-%
-% The fourth parameter is the lapse rate - the asymptotic performance at 
-% high values of x.  For a perfect subject, this would be 0, but sometimes
-% subjects have a "lapse" and get the answer wrong even when the stimulus
-% is easy to see.  We can search over this, but shouldn't allow it to take
-% on unreasonable values.  0.05 as an upper limit isn't crazy.
-%
-% paramsFree is a boolean vector that determins what parameters get
-% searched over. 1: free parameter, 0: fixed parameter
-paramsFree = [1 1 0 1];  
+% Turn off some Palamedes warnings
+warnState = warning('off','PALAMEDES:convergeFail');
 
-% Initial guess.  Setting the first parameter to the middle of the stimulus
-% range and the second to 1 puts things into a reasonable ballpark here.
-paramsValues0 = [mean(comparisonStimuli'-testStimulus) 1 0.5 0.01];
+% Calculate SD if requested
+if p.Results.calcSD
+    nBootStrapsSD=400;
+    paramsValuesSD = PAL_PFML_BootstrapNonParametric(...
+        stimulusLevel, nCorrect, nTrials, [], paramsFree, nBootStrapsSD, ...
+        p.Results.fitFunction,...
+        'searchGrid',searchGrid);
+else
+    paramsValuesSD = [];
+end
 
-% This puts limits on the range of the lapse rate
-lapseLimits = [0 0.05];
+% Calculate p-value if requested
+if p.Results.calcPValue
+    nBootStrapsSD=1000;
+        [~, pValue] = PAL_PFML_GoodnessOfFit(stimulusLevel, nCorrect, nTrials, ...
+    paramsValues, paramsFree, nBootStrapsSD, p.Results.fitFunction, 'searchGrid', searchGrid);
+else
+    pValue = [];
+end
 
-% Set up standard options for Palamedes search
-options = PAL_minimize('options');
-
-% Do the search to get the parameters
-[paramsValues] = PAL_PFML_Fit(...
-    values',responses',ones(size(responses')), ...
-    paramsValues0,paramsFree,PF,'searchOptions',options,'lapseLimits',lapseLimits);
-
-probCorrFitStair = PF(paramsValues,comparisonStimuliFit'-testStimulus);
-threshPalStair = PF(paramsValues,thresholdCriterionCorrect,'inverse');
+% Restore the warning state
+warning(warnState);
 
 end
