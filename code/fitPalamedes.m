@@ -1,4 +1,4 @@
-function [paramsValues, modelFitFunc, paramsValuesSD, pValue]  = fitPalamedes(axisAcuityData, position, varargin)
+function [modelFitFunc, paramsValues, paramsValuesSD, pValue]  = fitPalamedes(axisAcuityData, position, varargin)
 % Fit psychometric function to the acuity data at a position
 %
 % Syntax:
@@ -42,10 +42,10 @@ function [paramsValues, modelFitFunc, paramsValuesSD, pValue]  = fitPalamedes(ax
 %                           procedure is performed to obtain a p-value.
 %
 % Outputs:
-%   paramsValues          - 1xn vector of model fit parameter values.
 %   modelFitFunc          - Handle to anonymous function that takes as
 %                           input spatial frequency in cycles/deg and
 %                           returns the expected percentage correct.
+%   paramsValues          - 1xn vector of model fit parameter values.
 %   paramsValuesSD        - 1xn vector of SD values for the params.
 %   pValue                - Scalar. p-value of the model fit.
 %
@@ -66,7 +66,7 @@ p.addRequired('position', @(x)(isnumeric(x) | iscell(x)));
 p.addParameter('fitFunction',@PAL_Logistic, @(x) (isa(x,'function_handle')));
 p.addParameter('searchGrid',struct(...
     'alpha',-1:0.2:1,'beta',logspace(0,2,10),...
-    'gamma',0:0.1:0.4,'lambda',0:0.025:0.1),@isstruct);
+    'gamma',0:0.1:0.5,'lambda',0:0.025:0.1),@isstruct);
 p.addParameter('calcSD',false, @islogical);
 p.addParameter('calcPValue',false, @islogical);
 
@@ -87,7 +87,7 @@ paramsValues = PAL_PFML_Fit(stimulusLevel, nCorrect, nTrials, ...
     p.Results.searchGrid, ...
     [1 1 1 1], ...
     p.Results.fitFunction, ...
-    'guessLimits',[0 0.4],...
+    'guessLimits',[0 0.5],...
     'lapseLimits',[0 0.1]);
 
 % Turn off some Palamedes warnings
@@ -97,9 +97,11 @@ warnState = warning('off','PALAMEDES:convergeFail');
 if p.Results.calcSD
     nBootStrapsSD=400;
     paramsValuesSD = PAL_PFML_BootstrapNonParametric(...
-        stimulusLevel, nCorrect, nTrials, [], p.Results.paramsFree, nBootStrapsSD, ...
+        stimulusLevel, nCorrect, nTrials, [], [1 1 1 1], nBootStrapsSD, ...
         p.Results.fitFunction,...
-        'searchGrid',searchGrid);
+        'searchGrid',p.Results.searchGrid, ...
+    'guessLimits',[0 0.5],...
+    'lapseLimits',[0 0.1]);
 else
     paramsValuesSD = [];
 end
@@ -108,14 +110,14 @@ end
 if p.Results.calcPValue
     nBootStrapsSD=1000;
         [~, pValue] = PAL_PFML_GoodnessOfFit(stimulusLevel, nCorrect, nTrials, ...
-    paramsValues, p.Results.paramsFree, nBootStrapsSD, p.Results.fitFunction, 'searchGrid', p.Results.searchGrid);
+    paramsValues, [1 1 1 1], nBootStrapsSD, p.Results.fitFunction, 'searchGrid', p.Results.searchGrid);
 else
     pValue = [];
 end
 
 % Create an anonymous function that takes cycles/deg input, converts to
 % log10 reciprocal cycles/deg, and then returns the proportion correct.
-modelFitFunc = @(x) p.Results.fitFunction(paramsValues,log10(1./x));
+modelFitFunc = @(paramsValues, x) p.Results.fitFunction(paramsValues,log10(1./x));
 
 % Restore the warning state
 warning(warnState);
