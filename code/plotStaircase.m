@@ -1,8 +1,8 @@
-function lineHandle = plotStaircase(axisAcuityData, position, varargin)
+function plotStaircase(axisAcuityData, position, varargin)
 % Plots the contents of axisAcuityData as a staircase for one location
 %
 % Syntax:
-%   plotSingleStaircase = plotStaircase(axisAcuityData)
+%   plotStaircase(axisAcuityData, position)
 %
 % Description:
 %   Uses the data structure axisAcuityData to create a graph of stimulus
@@ -75,7 +75,7 @@ trialNumber = nan(1,length(idx));
 trialNumber(idx) = 1:sum(idx);
 
 % Plot the data and retain the handle to the plot line
-lineHandle = semilogy(trialNumber(idx), axisAcuityData.cyclesPerDeg(idx),'-k','LineWidth',1);
+semilogy(trialNumber(idx), axisAcuityData.cyclesPerDeg(idx),'-k','LineWidth',1);
 
 % Add markers for correect and incorrect trials
 hold on
@@ -86,7 +86,7 @@ semilogy(trialNumber(idxNoResponse),axisAcuityData.cyclesPerDeg(idxNoResponse),'
     'MarkerFaceColor','blue','MarkerSize',10);
 
 % Set the plot limits
-pbaspect([2 1 1])
+pbaspect([3 1 1])
 xlim([0.5, sum(idx)+0.5]);
 ylim([0.75, 40]);
 
