@@ -23,12 +23,25 @@ function [threshVal, threshValCI] = plotPercentCorrectByBin(axisAcuityData, posi
 %                           degrees of the stimuli to be plotted.
 %
 % Optional key/value pairs:
-%  'showChartJunk'        - Boolean. Controls if axis labels, tick marks,
-%                           etc are displayed.
+%  'criterion'            - Scalar. The proportion correct for which the
+%                           threhsold will be determined.
+%  'plotSymbolMaxSize'    - Scalar. The plot symbols are scaled by the
+%                           relative number of trials in that bin. This
+%                           controls the maximum size of the plot symbols.
+%  'xDomain'              - 1x2 vector. The x-axis minimum and maximum spatial
+%                           frequency (in cycles per degree).
+%  'calcThreshCI'         - Logical. Controls if the 95% confidence
+%                           interval on the threshold is calculated and
+%                           shown on the plot.
+%  'nBoots'               - Scalar. The number of resamples used to
+%                           calculate the CI.
 %
 % Outputs:
 %   threshVal             - Scalar. The stimulus value, in cycles/deg,
-%                           estimated to produce 50% accuracy.
+%                           estimated to produce the criterion accuracy.
+%   threshValCI           - 1x2 vector. The 95% CI around the threshVal. If
+%                           calcThreshCI is set to false, this variable is
+%                           returned as [nan nan].
 % 
 % Examples 
 %{
@@ -50,11 +63,13 @@ p.addRequired('axisAcuityData',@isstruct);
 p.addRequired('position', @(x)(isnumeric(x) | iscell(x)));
 
 % Optional params
-p.addParameter('showChartJunk',true,@islogical);
-p.addParameter('plotSymbolMaxSize',100,@isscalar);
+p.addParameter('criterion',0.67,@isscalar);
+p.addParameter('plotSymbolMaxSize',50,@isscalar);
 p.addParameter('xDomain',[0.75 40],@isnumeric);
 p.addParameter('calcThreshCI',false,@islogical);
 p.addParameter('nBoots',1000,@isscalar);
+p.addParameter('showXLabel',true,@islogical);
+p.addParameter('showYLabel',true,@islogical);
 
 
 %% Parse and check the parameters
@@ -66,12 +81,10 @@ p.parse(axisAcuityData, position, varargin{:});
 % Get bins
 [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, position, varargin{:});
 
-% Get the palamedes fit to the data
-if p.Results.calcThreshCI
-    [modelFitFunc, paramsValues, paramsValuesSD]  = fitPalamedes(axisAcuityData, position, 'calcSD', true);
-else
-    [modelFitFunc, paramsValues, paramsValuesSD]  = fitPalamedes(axisAcuityData, position, 'calcSD', false);
-end
+% Get the palamedes fit to the data. Pass the value of the calcThreshCI
+% parameter to set if the SD of the parameters should be obtained.
+[modelFitFunc, paramsValues, paramsValuesSD]  = ...
+    fitPalamedes(axisAcuityData, position, 'calcSD', p.Results.calcThreshCI);
 
 % Figure out how big to make the symbols
 symbolSize = 100./(nTrials./max(nTrials));
@@ -88,45 +101,46 @@ fineSupport = logspace(log10(p.Results.xDomain(1)),log10(p.Results.xDomain(2)));
 plot(fineSupport,modelFitFunc(paramsValues, fineSupport),'-k');
 
 % Determine the 50% performance point
-threshVal = findThresh(paramsValues, modelFitFunc);
-plot([threshVal threshVal],[0 0.5],'--k');
-plot(threshVal,0.5,'xk');
+threshVal = findThresh(paramsValues, modelFitFunc, p.Results.criterion);
+plot([threshVal threshVal],[0 p.Results.criterion],'--k');
+plot(threshVal,p.Results.criterion,'xk');
 
 % Boot-strap resample to get a confidence interval on the threshold
 if p.Results.calcThreshCI
     threshValBoots = nan(1,1000);
     for bb=1:p.Results.nBoots
-        threshValBoots(bb)=findThresh(normrnd(paramsValues, paramsValuesSD),modelFitFunc);
+        threshValBoots(bb)=findThresh(normrnd(paramsValues, paramsValuesSD),modelFitFunc, p.Results.criterion);
     end
     threshValSort = sort(threshValBoots);
     threshValCI(1) = threshValSort(round(sum(~isnan(threshValSort))*0.05));
     threshValCI(2) = threshValSort(round(sum(~isnan(threshValSort))*0.95));
     
-    plot(threshValCI,[0.5 0.5],'-r');
+    plot(threshValCI,[p.Results.criterion p.Results.criterion],'-r','LineWidth',2);
+else
+    threshValCI = [nan nan];
 end
 
 % Reverse the x-axis so that performance gets better to the right
 set(gca,'xscale','log')
 set(gca, 'XDir','reverse')
 
-% Set the plot limits
+% Clean up and label
+text(0.05,0.9,[num2str(sum(nTrials)) ' trials'],'Units','normalized')
+if p.Results.showYLabel
+    ylabel('Proportion correct');
+end
+if p.Results.showXLabel
+    xlabel('Log spatial freq [cycles/deg]');
+end
 pbaspect([3 1 1])
 ylim([0 1]);
 xlim(p.Results.xDomain);
 
-% Hide or show plot label elements under the control of showChartJunk
-if p.Results.showChartJunk
-    ylabel('Proportion correct');
-    xlabel('Log spatial freq [cycles/deg]');
-else
-    axis off
-end
-
 end
 
 
-function threshVal = findThresh(paramsValues, modelFitFunc)
-myObj = @(x) (modelFitFunc(paramsValues,x)-0.5);
+function threshVal = findThresh(paramsValues, modelFitFunc, criterion)
+myObj = @(x) (modelFitFunc(paramsValues,x)-criterion);
 options = optimset('Display','off');
 threshVal = fzero(myObj,10,options);
 end
