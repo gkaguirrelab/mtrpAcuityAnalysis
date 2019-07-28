@@ -1,6 +1,6 @@
 
 subjectIDs = {'11060','11089','11080','11096'};
-subjectColors = {'k','r','b','g'};
+subjectColors = {'m','r','b','g'};
 criterion = 0.67;
 calcThreshCI = false;
 
@@ -17,6 +17,12 @@ positionSets = {...
 
 % Set up a figure to hold the threshold results
 threshFigHandle = figure('NumberTitle', 'off', 'Name', 'Threshold values across subjects');
+
+% Add the Wilkinson data fit line
+[wilkinsonEccen, wilkinsonAcuity] = wilkinson2016Data();
+f = fit(wilkinsonEccen', wilkinsonAcuity','exp2');
+plot(2.5:0.5:20, f(2.5:0.5:20), '-','color',[1,0.5,0.5],'LineWidth', 4)
+hold on
 
 % Set up a bit of jitter on the x-axis for the across-subject figure
 if calcThreshCI
@@ -38,7 +44,6 @@ for ss=1:length(subjectIDs)
     figPos = get(subjectFigHandle, 'Position');
     set(subjectFigHandle, 'Position', [figPos(1) figPos(2) 400 700]);
     
-
     % Loop over the sets of eccentricity positions
     threshVals = zeros(1,length(positionSets));
     threshValCIs = zeros(2,length(positionSets));
@@ -52,19 +57,26 @@ for ss=1:length(subjectIDs)
         % Add this point and an error bar to the across-subject plot
         figure(threshFigHandle);
         plot(eccenVals(ii)+eccenJitter(ss),threshVals(ii),['o',subjectColors{ss}]);
-        hold on        
-        plot([eccenVals(ii)+eccenJitter(ss) eccenVals(ii)+eccenJitter(ss)],threshValCIs(:,ii),['-',subjectColors{ss}],'LineWidth',1);
+        plot([eccenVals(ii)+eccenJitter(ss) eccenVals(ii)+eccenJitter(ss)],threshValCIs(:,ii),'-','color','r','LineWidth',1);
     end
     
     % Plot a line connecting these thresh vals
     figure(threshFigHandle);
-    plot(eccenVals+eccenJitter(ss),threshVals,['-',subjectColors{ss}],'LineWidth',2);
+    plot(eccenVals+eccenJitter(ss),threshVals,'-','color',[0.5,0.5,0.5],'LineWidth',2);
     hold on
 end
 
-% Finish the figure
+% Format the figure
 figure(threshFigHandle);
-xlim([0 25]);
-ylim([1 14]);
-xlabel('Eccentricity [deg]');
-ylabel('Stimulus threshold for 50% performance [cycles/deg]');
+xlim([0 22]);
+ylim([1 15]);
+xlabel('Eccentricity [deg]','FontSize',14);
+ylabel(['Stimulus threshold for ' num2str(round(criterion*100)) '% performance [cycles/deg]'],'FontSize',14);
+
+% Create a legend
+pHandles = [];
+for ss=1:length(subjectIDs)
+    pHandles(ss)=plot(20,13,'o','color',subjectColors{ss});
+end
+legend(pHandles,subjectIDs,'FontSize',16)
+clear pHandles
