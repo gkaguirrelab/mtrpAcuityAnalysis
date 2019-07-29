@@ -32,11 +32,14 @@ function plotStaircase(axisAcuityData, position, varargin)
 % Examples
 %{
     % Plot a location from the first mat file in the data directory
+    subjectID = '11096';
+    x = 10; y = 0;
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpCompiledDataPath');
-    tmp = dir(fullfile(dataBasePath,'*_axisAcuityData.mat'));
-    dataFileName = fullfile(tmp(1).folder,tmp(1).name);
+    dataFileName =  fullfile(dataBasePath,['Subject_AOSO_' subjectID '_axisAcuityData.mat']);
     load(dataFileName,'axisAcuityData')
-    plotStaircase(axisAcuityData,[5 0]);
+    figure
+    plotStaircase(axisAcuityData,[10 0]);
+    title(['AOSO-' subjectID ', [x=' num2str(x) ', y=', num2str(y) ']']);
 %}
 
 
