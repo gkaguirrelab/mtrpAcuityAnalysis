@@ -38,7 +38,7 @@ function plotStaircase(axisAcuityData, position, varargin)
     dataFileName =  fullfile(dataBasePath,['Subject_AOSO_' subjectID '_axisAcuityData.mat']);
     load(dataFileName,'axisAcuityData')
     figure
-    plotStaircase(axisAcuityData,[10 0]);
+    plotStaircase(axisAcuityData,[20 0]);
     title(['AOSO-' subjectID ', [x=' num2str(x) ', y=', num2str(y) ']']);
 %}
 
