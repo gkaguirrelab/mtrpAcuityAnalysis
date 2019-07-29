@@ -32,8 +32,8 @@ function [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, position, var
 %  'nBins'                - Scalar.
 %
 % Outputs:
-%   binCenters            - The center of each bin in linear spatial
-%                           frequency units.
+%   binCenters            - 1xn vector. The center of each bin in linear 
+%                           spatial frequency units.
 %   nCorrect              - 1xn vector. The number of correct responses in
 %                           each bin, where n is the number of bins.
 %   nTrials               - 1xn vector. The total number of trials in each
@@ -72,6 +72,14 @@ p.parse(axisAcuityData, position, varargin{:});
 idx = getIndicies(axisAcuityData, position, varargin{:});
 values = axisAcuityData.cyclesPerDeg(idx);
 responses = axisAcuityData.response(idx);
+
+% Handle the case of insufficient data
+if sum(idx) < p.Results.nBins
+    binCenters = nan(1,p.Results.nBins);
+    nCorrect = nan(1,p.Results.nBins);
+    nTrials = nan(1,p.Results.nBins);
+    return
+end
 
 % How many points per bin?
 if isscalar(p.Results.nPerBin)

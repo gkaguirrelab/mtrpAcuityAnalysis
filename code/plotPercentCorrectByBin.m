@@ -81,6 +81,13 @@ p.parse(axisAcuityData, position, varargin{:});
 % Get bins
 [binCenters,nCorrect,nTrials] = binTrials(axisAcuityData, position, varargin{:});
 
+% Handle the case of no data
+if all(isnan(binCenters))
+    threshVal = nan;
+    threshValCI = [nan nan];
+    return
+end
+
 % Get the palamedes fit to the data. Pass the value of the calcThreshCI
 % parameter to set if the SD of the parameters should be obtained.
 [modelFitFunc, paramsValues, paramsValuesSD]  = ...
