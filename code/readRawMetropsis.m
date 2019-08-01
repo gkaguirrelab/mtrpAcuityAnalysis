@@ -84,9 +84,10 @@ axisAcuityData = struct;
 fileID = fopen(fname);
 
 % Read in the entire contents of the text file as strings
-retrieveValueStr = readmatrix(fname, 'OutputType', 'string');
+opts = delimitedTextImportOptions( 'Delimiter', {'\t'},'Whitespace', '\b ', 'LineEnding', {'\n'  '\r'  '\r\n'}, 'CommentStyle', {}, 'ConsecutiveDelimitersRule', 'split', 'LeadingDelimitersRule', 'keep', 'EmptyLineRule', 'skip', 'Encoding', 'windows-1252', 'MissingRule', 'fill', 'ImportErrorRule', 'fill', 'ExtraColumnsRule', 'addvars');
+retrieveValueStr = readmatrix(fname,opts, 'OutputType', 'string');
 
-% Extact the subject responses
+% Extract the subject responses
 responseTable = retrieveValueStr(:,p.Results.responseColumn);
 
 % Delete "NA" responses
@@ -97,7 +98,8 @@ responseChr = responseNA(responseNA ~= 'NA');
 responseHex = regexprep(responseChr, 'Hit', '01');
 responseHex2 = regexprep(responseHex, 'Miss', '00');
 responseHex3 = regexprep(responseHex2, 'No Response', '02');
-responseDec = hex2dec(responseHex3);
+responseHex4 = regexprep(responseHex3, 'Response', '02');
+responseDec = hex2dec(responseHex4);
 responseDec(responseDec == 2) = nan;
 axisAcuityData.response = responseDec;
 
