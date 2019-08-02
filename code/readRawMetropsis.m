@@ -65,6 +65,7 @@ p = inputParser; p.KeepUnmatched = false;
 p.addRequired('fname',@ischar);
 
 % Optional params
+p.addParameter('numHeaderLines',47,@isscalar);
 p.addParameter('responseColumn',25,@isscalar);
 p.addParameter('yPosColumn',24,@isscalar);
 p.addParameter('xPosColumn',23,@isscalar);
@@ -85,7 +86,7 @@ fileID = fopen(fname);
 
 % Read in the entire contents of the text file as strings
 opts = delimitedTextImportOptions( 'Delimiter', {'\t'},'Whitespace', '\b ', 'LineEnding', {'\n'  '\r'  '\r\n'}, 'CommentStyle', {}, 'ConsecutiveDelimitersRule', 'split', 'LeadingDelimitersRule', 'keep', 'EmptyLineRule', 'skip', 'Encoding', 'windows-1252', 'MissingRule', 'fill', 'ImportErrorRule', 'fill', 'ExtraColumnsRule', 'addvars');
-retrieveValueStr = readmatrix(fname,opts, 'OutputType', 'string');
+retrieveValueStr = readmatrix(fname,opts,'NumHeaderLines',p.Results.numHeaderLines,'OutputType', 'string');
 
 % Extract the subject responses
 responseTable = retrieveValueStr(:,p.Results.responseColumn);
@@ -96,10 +97,9 @@ responseChr = responseNA(responseNA ~= 'NA');
 
 % Convert string array to numeric and store in axisAcuityData
 responseHex = regexprep(responseChr, 'Hit', '01');
-responseHex2 = regexprep(responseHex, 'Miss', '00');
-responseHex3 = regexprep(responseHex2, 'No Response', '02');
-responseHex4 = regexprep(responseHex3, 'Response', '02');
-responseDec = hex2dec(responseHex4);
+responseHex = regexprep(responseHex, 'Miss', '00');
+responseHex = regexprep(responseHex, 'No Response', '02');
+responseDec = hex2dec(responseHex);
 responseDec(responseDec == 2) = nan;
 axisAcuityData.response = responseDec;
 
