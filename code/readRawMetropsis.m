@@ -86,7 +86,7 @@ fileID = fopen(fname);
 
 % Read in the entire contents of the text file as strings
 opts = delimitedTextImportOptions( 'Delimiter', {'\t'},'Whitespace', '\b ', 'LineEnding', {'\n'  '\r'  '\r\n'}, 'CommentStyle', {}, 'ConsecutiveDelimitersRule', 'split', 'LeadingDelimitersRule', 'keep', 'EmptyLineRule', 'skip', 'Encoding', 'windows-1252', 'MissingRule', 'fill', 'ImportErrorRule', 'fill', 'ExtraColumnsRule', 'addvars');
-retrieveValueStr = readmatrix(fname,opts,'NumHeaderLines',p.Results.numHeaderLines,'OutputType', 'string');
+retrieveValueStr = readmatrix(fname,'NumHeaderLines',p.Results.numHeaderLines,'Delimiter', {'\t'},'OutputType', 'string');
 
 % Extract the subject responses
 responseTable = retrieveValueStr(:,p.Results.responseColumn);
@@ -104,7 +104,7 @@ responseDec(responseDec == 2) = nan;
 axisAcuityData.response = responseDec;
 
 % Read in the text file again, now as numeric values
-retrieveValue = readmatrix(fname);
+retrieveValue = readmatrix(fname,'NumHeaderLines',p.Results.numHeaderLines,'Delimiter', {'\t'});
 
 % Extract the Y position of the stimulus
 positionYnan = retrieveValue(:,p.Results.yPosColumn);
