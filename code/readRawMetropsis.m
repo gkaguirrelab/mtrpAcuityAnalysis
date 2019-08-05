@@ -66,10 +66,12 @@ p.addRequired('fname',@ischar);
 
 % Optional params
 p.addParameter('numHeaderLines',47,@isscalar);
-p.addParameter('responseColumn',25,@isscalar);
-p.addParameter('yPosColumn',24,@isscalar);
-p.addParameter('xPosColumn',23,@isscalar);
 p.addParameter('spatialFreqColumn',12,@isscalar);
+p.addParameter('envelopeRadiusColumn',18,@isscalar);
+p.addParameter('xPosColumn',23,@isscalar);
+p.addParameter('yPosColumn',24,@isscalar);
+p.addParameter('responseColumn',25,@isscalar);
+p.addParameter('correctForEccentricFixation',true,@islogical);
 
 
 %% Parse and check the parameters
@@ -106,13 +108,27 @@ axisAcuityData.response = responseDec;
 % Read in the text file again, now as numeric values
 retrieveValue = readmatrix(fname,'NumHeaderLines',p.Results.numHeaderLines,'Delimiter', {'\t'});
 
-% Extract the Y position of the stimulus
-positionYnan = retrieveValue(:,p.Results.yPosColumn);
-axisAcuityData.posY = rmmissing(positionYnan);  % Remove Nan from vector
+% Extract the envelope radius of the envelopeRadiusColumn
+envelopeMissingNan = retrieveValue(:,p.Results.xPosColumn);
+axisAcuityData.radius = rmmissing(envelopeMissingNan);  % Remove Nan from vector
 
 % Extract the X position of the stimulus
 positionXnan = retrieveValue(:,p.Results.xPosColumn);
 axisAcuityData.posX = rmmissing(positionXnan);  % Remove Nan from vector
+
+% Extract the Y position of the stimulus
+positionYnan = retrieveValue(:,p.Results.yPosColumn);
+axisAcuityData.posY = rmmissing(positionYnan);  % Remove Nan from vector
+
+% THe x and y positions are relative to the center of the screen. In some
+% experiments the subject maintains fixation at a point other than at the
+% center of the screen. If the correctForEccentricFixation param is set,
+% the x and y pos values are corrected for this.
+if p.Results.correctForEccentricFixation
+    % The position of the stimulus may be deduced from the sigma envelope,
+    % following this equation
+    axisAcuityData.posX = sign(axisAcuityData.posX).*(axisAcuityData.radius./0.75);
+end
 
 % Extract the carrier spatial frequency of the stimulus
 carrierSFRaw = retrieveValue(:,p.Results.spatialFreqColumn);
