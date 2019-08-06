@@ -38,7 +38,7 @@ function axisAcuityData = readRawMetropsis(fname, varargin)
 % Examples:
 %{
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
-    subject = 'Subject_AOSO_11060';
+    subject = 'Subject_AOSO_11055';
     fileList = dir(fullfile(dataBasePath,'perimetricAcuityTextFiles',['*',subject,'*']));
     for ii = 1:length(fileList)
         fname = fullfile(fileList(ii).folder,fileList(ii).name);
@@ -65,7 +65,7 @@ p = inputParser; p.KeepUnmatched = false;
 p.addRequired('fname',@ischar);
 
 % Optional params
-p.addParameter('numHeaderLines',47,@isscalar);
+p.addParameter('numHeaderLines',36,@isscalar);
 p.addParameter('spatialFreqColumn',12,@isscalar);
 p.addParameter('envelopeRadiusColumn',18,@isscalar);
 p.addParameter('xPosColumn',23,@isscalar);
@@ -96,6 +96,9 @@ responseTable = retrieveValueStr(:,p.Results.responseColumn);
 % Delete "NA" responses
 responseNA = rmmissing(responseTable);
 responseChr = responseNA(responseNA ~= 'NA');
+
+% Delete the column header if it is present
+responseChr = responseChr(responseChr ~= 'Response');
 
 % Convert string array to numeric and store in axisAcuityData
 responseHex = regexprep(responseChr, 'Hit', '01');
