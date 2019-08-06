@@ -109,7 +109,7 @@ axisAcuityData.response = responseDec;
 retrieveValue = readmatrix(fname,'NumHeaderLines',p.Results.numHeaderLines,'Delimiter', {'\t'});
 
 % Extract the envelope radius of the envelopeRadiusColumn
-envelopeMissingNan = retrieveValue(:,p.Results.xPosColumn);
+envelopeMissingNan = retrieveValue(:,p.Results.envelopeRadiusColumn);
 axisAcuityData.radius = rmmissing(envelopeMissingNan);  % Remove Nan from vector
 
 % Extract the X position of the stimulus
