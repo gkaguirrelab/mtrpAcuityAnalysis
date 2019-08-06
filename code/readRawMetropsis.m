@@ -125,9 +125,9 @@ axisAcuityData.posY = rmmissing(positionYnan);  % Remove Nan from vector
 % center of the screen. If the correctForEccentricFixation param is set,
 % the x and y pos values are corrected for this.
 if p.Results.correctForEccentricFixation
-    % The position of the stimulus may be deduced from the sigma envelope,
-    % following this equation
-    axisAcuityData.posX = sign(axisAcuityData.posX).*(axisAcuityData.radius./0.75);
+    % The position of the stimulus may be derived from the stimulus radius,
+    % following this equation:
+    axisAcuityData.posX = sign(axisAcuityData.posX).*(axisAcuityData.radius./0.75).*10;
 end
 
 % Extract the carrier spatial frequency of the stimulus
