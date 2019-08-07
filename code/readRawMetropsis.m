@@ -115,6 +115,10 @@ retrieveValue = readmatrix(fname,'NumHeaderLines',p.Results.numHeaderLines,'Deli
 envelopeMissingNan = retrieveValue(:,p.Results.envelopeRadiusColumn);
 axisAcuityData.radius = rmmissing(envelopeMissingNan);  % Remove Nan from vector
 
+if length(axisAcuityData.radius) ~= length(axisAcuityData.response)
+    error('Error in reading the response column');
+end
+
 % Extract the X position of the stimulus
 positionXnan = retrieveValue(:,p.Results.xPosColumn);
 axisAcuityData.posX = rmmissing(positionXnan);  % Remove Nan from vector
