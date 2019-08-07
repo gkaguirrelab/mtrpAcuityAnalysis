@@ -65,7 +65,7 @@ p = inputParser; p.KeepUnmatched = false;
 p.addRequired('fname',@ischar);
 
 % Optional params
-p.addParameter('numHeaderLines',36,@isscalar);
+p.addParameter('numHeaderLines',33,@isscalar);
 p.addParameter('spatialFreqColumn',12,@isscalar);
 p.addParameter('envelopeRadiusColumn',18,@isscalar);
 p.addParameter('xPosColumn',23,@isscalar);
