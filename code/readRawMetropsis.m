@@ -68,6 +68,7 @@ p.addRequired('fname',@ischar);
 p.addParameter('numHeaderLines',33,@isscalar);
 p.addParameter('spatialFreqColumn',12,@isscalar);
 p.addParameter('envelopeRadiusColumn',18,@isscalar);
+p.addParameter('envelopeSigmaColumn',19,@isscalar);
 p.addParameter('xPosColumn',23,@isscalar);
 p.addParameter('yPosColumn',24,@isscalar);
 p.addParameter('responseColumn',25,@isscalar);
@@ -112,10 +113,10 @@ axisAcuityData.response = responseDec;
 retrieveValue = readmatrix(fname,'NumHeaderLines',p.Results.numHeaderLines,'Delimiter', {'\t'});
 
 % Extract the envelope radius of the envelopeRadiusColumn
-envelopeMissingNan = retrieveValue(:,p.Results.envelopeRadiusColumn);
-axisAcuityData.radius = rmmissing(envelopeMissingNan);  % Remove Nan from vector
+envelopeMissingNan = retrieveValue(:,p.Results.envelopeSigmaColumn);
+axisAcuityData.sigma = rmmissing(envelopeMissingNan);  % Remove Nan from vector
 
-if length(axisAcuityData.radius) ~= length(axisAcuityData.response)
+if length(axisAcuityData.sigma) ~= length(axisAcuityData.response)
     error('Error in reading the response column');
 end
 
@@ -134,7 +135,7 @@ axisAcuityData.posY = rmmissing(positionYnan);  % Remove Nan from vector
 if p.Results.correctForEccentricFixation
     % The position of the stimulus may be derived from the stimulus radius,
     % following this equation:
-    axisAcuityData.posX = sign(axisAcuityData.posX).*(axisAcuityData.radius./0.75).*10;
+    axisAcuityData.posX = sign(axisAcuityData.posX).*(axisAcuityData.sigma).*10;
 end
 
 % Extract the carrier spatial frequency of the stimulus
