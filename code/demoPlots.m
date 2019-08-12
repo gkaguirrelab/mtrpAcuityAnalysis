@@ -1,5 +1,5 @@
 
-subjectIDs = {'11074'};
+subjectIDs = {'11057','11074'};
 subjectColors = {'m','r','b','g','y'};
 criterion = 0.702;
 calcThreshCI = true;
