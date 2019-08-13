@@ -1,8 +1,8 @@
 
-subjectIDs = {'11057','11074'};
+subjectIDs = {'11057','11074','11068'};
 subjectColors = {'m','r','b','g','y'};
 criterion = 0.702;
-calcThreshCI = true;
+calcThreshCI = false;
 
 % Identify the data location and set up the stimulus properties
 dataBasePath = getpref('mtrpAcuityAnalysis','mtrpCompiledDataPath');
