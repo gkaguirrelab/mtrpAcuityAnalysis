@@ -1,8 +1,11 @@
 
-subjectIDs = {'11057','11074','11068'};
-subjectColors = {'m','r','b','g','y'};
+% Fixed parameters of the analysis
+subjectIDs = {'11057','11074','11068','11061'};
 criterion = 0.702;
 calcThreshCI = false;
+
+% Get a set of colors to use for plotting
+subjectColors = getDistinguishableColors(length(subjectIDs));
 
 % Identify the data location and set up the stimulus properties
 dataBasePath = getpref('mtrpAcuityAnalysis','mtrpCompiledDataPath');
@@ -63,8 +66,8 @@ for ss=1:length(subjectIDs)
         title(titleSets{ii});
         % Add this point and an error bar to the across-subject plot
         figure(threshFigHandle);
-        plot(eccenVals(ii)+eccenJitter(ss),threshVals(ii),['o',subjectColors{ss}]);
-        plot([eccenVals(ii)+eccenJitter(ss) eccenVals(ii)+eccenJitter(ss)],threshValCIs(:,ii),'-','color','r','LineWidth',1);
+        plot(eccenVals(ii)+eccenJitter(ss),threshVals(ii),'o','color',subjectColors(ss,:));
+        plot([eccenVals(ii)+eccenJitter(ss) eccenVals(ii)+eccenJitter(ss)],threshValCIs(:,ii),'-','color',subjectColors(ss,:),'LineWidth',1);
     end
     
     % Plot a line connecting these thresh vals
@@ -83,7 +86,7 @@ ylabel(['Stimulus threshold for ' num2str(round(criterion*100)) '% performance [
 % Create a legend
 pHandles = [];
 for ss=1:length(subjectIDs)
-    pHandles(ss)=plot(20,13,'o','color',subjectColors{ss});
+    pHandles(ss)=plot(20,13,'o','color',subjectColors(ss,:));
 end
 legend(pHandles,subjectIDs,'FontSize',16)
 clear pHandles
