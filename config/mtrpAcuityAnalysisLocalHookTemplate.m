@@ -44,7 +44,7 @@ if ismac
     % Code to run on Mac platform
     MTRP_dataBasePath = fullfile(filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_data');
     MTRP_analysisBasePath = fullfile(filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_analysis');
-    MTRP_compiledDataBasePath = fullfile(filesep,'Users',userID,'Documents', 'MATLAB', 'projects', 'mtrpAcuityAnalysis', 'data');
+    MTRP_compiledDataBasePath = fullfile(filesep,'Users',userID,'Documents', 'MATLAB', 'projects', 'mtrpAcuityAnalysis','data');
 elseif ispc
     % Remove windows prefix from userID
     tmp = strsplit(userID,filesep);
@@ -53,7 +53,7 @@ elseif ispc
     % Code to run on Windows platform
     MTRP_dataBasePath = fullfile('C:',filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_data');
     MTRP_analysisBasePath = fullfile('C:',filesep,'Users',userID,'Dropbox (Aguirre-Brainard Lab)','MTRP_analysis');
-    MTRP_compiledDataBasePath = fullfile('C:',filesep,'Users',userID,'Documents','MATLAB', 'projects', 'mtrpAcuityAnalysis');
+    MTRP_compiledDataBasePath = fullfile('C:',filesep,'Users',userID,'Documents','MATLAB', 'projects', 'mtrpAcuityAnalysis','data');
     
 else
     disp('What are you using?')
