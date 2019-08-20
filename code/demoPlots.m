@@ -1,6 +1,6 @@
 
 % Fixed parameters of the analysis
-subjectIDs = {'11057','11074','11068','11061'};
+subjectIDs = {'11057','11074','11068','11061','11065','11096'};
 criterion = 0.702;
 calcThreshCI = false;
 
