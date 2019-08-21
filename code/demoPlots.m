@@ -9,15 +9,11 @@ subjectColors = getDistinguishableColors(length(subjectIDs));
 
 % Identify the data location and set up the stimulus properties
 dataBasePath = getpref('mtrpAcuityAnalysis','mtrpCompiledDataPath');
+
+% Combining across nasal and temporal measurements at the four
+% eccentricities
 titleSets = {'2.5 degrees','5 degrees','10 degrees','20 degrees'};
 eccenVals = [2.5,5,10,20];
-% positionSets = {...
-%     {[-2.5, 0],[2.5,0],[0,2.5],[0,-2.5],[1.77,1.77],[-1.77,-1.77],[-1.77,1.77],[1.77,-1.77]};...
-%     {[-5, 0],[5,0],[0,5],[0,-5],[3.54,3.54],[-3.54,-3.54],[-3.54,3.54],[3.54,-3.54]};...
-%     {[-10, 0],[10,0],[0,10],[0,-10],[7.07,7.07],[-7.07,-7.07],[-7.07,7.07],[7.07,-7.07]};...
-%     {[-20, 0],[20,0],[0,20],[0,-20],[14.14,14.14],[-14.14,-14.14],[-14.14,14.14],[14.14,-14.14]};...
-%     };
-
 positionSets = {...
     {[-2.5, 0],[2.5,0]};...
     {[-5, 0],[5,0]};...
@@ -72,7 +68,8 @@ for ss=1:length(subjectIDs)
     
     % Plot a line connecting these thresh vals
     figure(threshFigHandle);
-    plot(eccenVals+eccenJitter(ss),threshVals,'-','color',[0.5,0.5,0.5],'LineWidth',2);
+    grayedColor = (subjectColors(ss,:)-[0.5 0.5 0.5]).*0.25 + [0.7 0.7 0.7];
+    plot(eccenVals+eccenJitter(ss),threshVals,'-','color',grayedColor,'LineWidth',2);
     hold on
 end
 
