@@ -38,7 +38,7 @@ function axisAcuityData = readRawMetropsis(fname, varargin)
 % Examples:
 %{
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
-    subject = 'Subject_AOSO_11057';
+    subject = 'Subject_AOSO_11058';
     fileList = dir(fullfile(dataBasePath,'perimetricAcuityTextFiles',['*',subject,'*']));
     for ii = 1:length(fileList)
         fname = fullfile(fileList(ii).folder,fileList(ii).name);
