@@ -1,8 +1,15 @@
 
 % Fixed parameters of the analysis
 subjectIDs = {...
-    '11057','11074','11068','11061','11065','11096','11051','11064',...
-    '11078','11098','11070','11072','11058','11028','11050','11080'};
+    '11074','11068','11061','11065','11096','11051','11064',...
+    '11078','11098','11070','11072','11028','11050','11080'};
+
+% Subject 11096 has clear evidence of anti-aliased responses
+
+% These subjects failed to achieve >90% correct on catch trials 
+excludedSubjectIDs = {...
+    '11057','11058'};
+
 criterion = 0.702;
 calcThreshCI = false;
 
@@ -36,7 +43,7 @@ hold on
 if calcThreshCI
     jitterSize = 0.5;
 else
-    jitterSize = 0;
+    jitterSize = 0.1;
 end
 eccenJitter = jitterSize.*((1:length(subjectIDs))-(length(subjectIDs)/2));
 
