@@ -31,14 +31,10 @@ function axisAcuityData = readRawMetropsis(fname, varargin)
 %       cyclesPerDeg      - Carrier spatial frequency of stimulus cyc/deg
 %       response          - Hit -- 1 Miss -- 0
 %
-% History:
-%    07/10/19  jen       Created module from previous code
-%    07/19/19  jen/gka   Comments and even more modular
-%
 % Examples:
 %{
     dataBasePath = getpref('mtrpAcuityAnalysis','mtrpDataPath');
-    subject = 'Subject_AOSO_11080';
+    subject = 'Subject_AOSO_11093';
     fileList = dir(fullfile(dataBasePath,'perimetricAcuityTextFiles',['*',subject,'*']));
     for ii = 1:length(fileList)
         fname = fullfile(fileList(ii).folder,fileList(ii).name);
